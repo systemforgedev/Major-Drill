@@ -4,8 +4,23 @@ game = "war_thunder"      # or "generic_action", or a profile file like "profile
 player_name = ""          # your in-game name (helps spot your kills and deaths in live mode)
 matches_dir = "matches"
 
+# --- Free mode (default): no API key, nothing leaves your PC -----------------
+drill = "protocols"       # protocols pick the calls ("model" = a model picks, see [fast])
+major = "local"           # rules-based review ("model" = a model reviews, see [deep])
+# protocols = "protocols/mech_havoc.toml"   # default: protocols/<game>.toml
+
+# Optional local vision model ("kev") that describes frames for the protocols.
+[vision]
+provider = "none"         # rules only. For Ollama or LM Studio:
+# provider = "openai_compat"
+# base_url = "http://127.0.0.1:11434/v1"   # Ollama; LM Studio is http://127.0.0.1:1234/v1
+# model = "qwen2.5vl:7b"                    # or kev's name in your server
+# timeout_s = 3
+
+# --- Cloud (optional, later). Only used when drill or major = "model". -------
+
 # --- Major: the post-match reviewer (base tier, works for everyone) ---------
-# Cloud (default): strong and needs no GPU. Needs ANTHROPIC_API_KEY.
+# Cloud: strong and needs no GPU. Needs `pip install anthropic` and ANTHROPIC_API_KEY.
 [deep]
 provider = "anthropic"
 model = "claude-opus-5-5"

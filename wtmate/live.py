@@ -12,6 +12,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from .config import Config
 from .drill import observe
+from .local import LocalDrill, log_firing
 from .match import Match
 from .memory import Memory
 from .models import Provider
@@ -43,7 +44,8 @@ class CallGate:
             return False, f"too late ({latency_s:.1f}s)"
         if obs.get("confidence", 0) < self.min_confidence:
             return False, "low confidence"
-        if now - self.last_any < self.min_gap_s:
+        # Priority-1 protocols (e.g. low HP, surrounded) may interrupt the quiet gap.
+        if now - self.last_any < self.min_gap_s and not obs.get("urgent"):
             return False, "spoke too recently"
         if now - self.last_by_call.get(call, -1e9) < self.repeat_gap_s:
             return False, "repeat"
@@ -52,9 +54,11 @@ class CallGate:
         return True, "ok"
 
 
-def run_live(cfg: Config, drill: Provider, memory: Memory, profile, frame_source=None,
+def run_live(cfg: Config, drill: Provider | LocalDrill, memory: Memory, profile, frame_source=None,
              max_duration_s: float | None = None, stop_event: threading.Event | None = None) -> Match:
-    """Run one match. frame_source() -> jpeg bytes; defaults to the screen."""
+    """Run one match. frame_source() -> jpeg bytes; defaults to the screen.
+
+    drill is either a LocalDrill (protocols, no API key) or a model Provider."""
     stop_event = stop_event or threading.Event()
     # The local map feed is War Thunder only; other games run screen-only.
     tel = Telemetry(cfg.telemetry.url) if cfg.telemetry.enabled and profile.key == "war_thunder" else None
@@ -123,17 +127,24 @@ def run_live(cfg: Config, drill: Provider, memory: Memory, profile, frame_source
 
     def ask_drill(t_capture: float, jpeg: bytes):
         try:
-            obs, res = observe(drill, memory, [(t_capture, jpeg)], profile)
-            if not obs:
-                return
-            o = obs[0]
+            if isinstance(drill, LocalDrill):
+                o = drill.observe(t_capture, jpeg)
+                p = next((x for x in drill.engine.protocols if x.id == o["protocol"]), None)
+                o["urgent"] = bool(p and p.priority == 1)
+            else:
+                obs, res = observe(drill, memory, [(t_capture, jpeg)], profile)
+                if not obs:
+                    return
+                o = obs[0]
             lag = clock() - t_capture
             latencies.append(lag)
             say, why = gate.decide(o, clock(), lag)
             o |= {"latency_s": round(lag, 2), "spoken": say, "gate": why}
             match.append("observations", o)
+            if isinstance(drill, LocalDrill):
+                log_firing(match, o, jpeg)
             if say:
-                voice.say(o["call"])
+                voice.say(o.get("say") or o["call"])
                 match.append("calls", {"t": t_capture, "call": o["call"], "reason": o.get("reason", ""),
                                        "latency_s": round(lag, 2)})
         except Exception as e:

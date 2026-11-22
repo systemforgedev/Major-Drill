@@ -1,21 +1,28 @@
-# Profile for Mech Havoc (Steam app 3237920, Early Access): a top-down, twin-stick mech
-# shooter played in missions with waves of robots. Based on the store page only, so
-# check screen_guide and calls against a few real screenshots and fix what's wrong.
+# Profile for Mech Havoc (Steam app 3237920, Early Access, v0.4.1.0): a top-down mech
+# shooter played in missions. Each mission has objectives (destroy targets, kill enemies,
+# optional goals), then an extraction. Checked against a real in-mission HUD screenshot
+# and the game notes in Project Hephaestus. Not yet checked against a recorded vanilla run.
 # Use it with:  wtmate --game profiles/mech_havoc.toml review my_run.mp4
 key = "mech_havoc"
 title = "Mech Havoc (top-down mech shooter)"
 teammate = "co-pilot"
-screen_guide = """- Top-down view: the player's mech is near the centre; enemies, cover, walls and destructible buildings around it.
-- Health, armor or energy bars and weapon cooldowns, wherever the HUD shows them. Low health means back off.
-- Waves of enemy robots, tanks and drones. Watch for being surrounded or enemies arriving from off-screen edges.
-- Support abilities: artillery strikes, turrets, drones and missile barrages. Notice when they are ready but unused.
-- Mission objective text, wave counters and mission-complete or mission-failed screens."""
-calls = ["none", "keep moving", "back off", "kite them", "watch your flank", "use your artillery",
-         "drop a turret", "send the drones", "focus the big one", "grab the pickup", "go for the objective"]
-situations = ["moving to objective", "fighting a wave", "boss or heavy enemy", "surrounded", "low health",
-              "between waves", "in a menu or upgrade screen", "mission failed or loading", "unclear"]
-events = ["none", "death", "kill", "big hit taken", "wave cleared", "objective done", "mission complete"]
-mistakes = ["stood still under fire", "got surrounded", "fought at low health", "held support abilities too long",
-            "wrong target first", "chased into a bad spot", "ignored the objective", "ignored a pickup",
-            "other"]
-grid_hint = "Leave empty unless the game shows a minimap with a lettered grid."
+screen_guide = """- Top-down view, the player's mech near the centre. A thin line from the mech shows where it aims. Enemies (scouts, walkers, gunner mechs) and walls and cover around it.
+- Top left: an HP box with the number (for example "HP 360.0"). Under it, yellow status text such as "Extraction Available!". Low HP means back off.
+- Top centre: resource counters (salvage and other materials picked up this mission), and the mission or area name.
+- Top right: a square minimap with a range label (for example 125m). The player is the white marker; enemies and objectives show as coloured marks.
+- Bottom left: call-ins (support), one row each with a name such as Precision Mortar or Static MG Turret, a bar, "Ready" when it can be used, and its key 1, 2 or 3.
+- Bottom right: two weapon slots, each with ammo left and the weapon name (for example HMG 72, Gauss Rifle 1). Low or zero ammo means reload (R) when it is safe. Q, R and Tab hints sit above them.
+- Interaction prompts appear in the middle of the screen with a key, for example "Spawn Targets [E]".
+- Mission complete, mission failed, extraction and the loadout or research menus are full screens."""
+calls = ["none", "keep moving", "back off", "reload now", "reload later", "watch your flank",
+         "call the mortar", "drop a turret", "focus the big one", "hit the objective", "grab the salvage",
+         "extract now"]
+situations = ["moving to objective", "fighting", "heavy enemy or boss", "surrounded", "low health",
+              "reloading or out of ammo", "objective done, extraction open", "in a menu or loadout screen",
+              "mission failed or loading", "unclear"]
+events = ["none", "death", "kill", "big hit taken", "objective done", "extraction available",
+          "mission complete"]
+mistakes = ["stood still under fire", "got surrounded", "fought at low health", "reloaded under fire",
+            "ran dry mid-fight", "held call-ins too long", "wrong target first", "chased into a bad spot",
+            "ignored the objective", "late to extract", "other"]
+grid_hint = "Leave empty. The minimap has no lettered grid."

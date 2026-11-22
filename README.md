@@ -9,7 +9,13 @@ Two roles do the work:
 - **Major** is the slow, careful one. It reviews the whole match, tests several explanations for
   each death, writes the AAR, grades Drill's calls, and keeps Drill's lessons-learned file up to date.
 
-Both roles are plug-in slots. Put Claude, a local open model (Qwen, Keye, anything served by Ollama,
+**By default it's free and local: no API key, no cloud.** Drill follows **protocols**, plain
+if-then rules like "enemies on your right flank, priority 1, say *watch your right*", and reads the
+screen with simple HUD checks (minimap dots, bars, colours, optional OCR for numbers). Major writes
+the review from what the protocols saw. Better protocols come from reviewing your runs in a Claude
+chat. See [PROTOCOLS.md](PROTOCOLS.md) and [SETUP_WINDOWS.md](SETUP_WINDOWS.md).
+
+Both roles are also plug-in slots. Put Claude, a local open model (Qwen, Keye, anything served by Ollama,
 LM Studio, llama.cpp or vLLM) or your own bot behind either one.
 
 ## Games
@@ -58,15 +64,19 @@ needs real-world tuning (see [PROBLEMS.md](PROBLEMS.md)).
    pip install -e .                # add [live] for live mode: pip install -e ".[live]"
    copy wtmate.example.toml wtmate.toml   # macOS/Linux: cp
    ```
-3. For Claude models, set `ANTHROPIC_API_KEY` (or run `ant auth login`).
+3. Optional, later: for Claude models, `pip install -e ".[cloud]"` and set `ANTHROPIC_API_KEY`.
 4. `wtmate check` tells you what's missing.
 
 ## Use
 
 ```
-wtmate --mock review my_match.mp4    # free dry run with fake models, to see the pages
-wtmate review my_match.mp4           # the real thing: Drill reads it, Major writes the AAR
-wtmate plan                          # after a few matches: Major's plan, rewrites Drill's lessons
+wtmate review my_match.mp4           # Drill (protocols) reads it, Major writes the review. Free.
+wtmate protocols test shot.png       # what the HUD readers see on a screenshot, and what Drill would say
+wtmate protocols check               # validate the protocol file
+wtmate label latest                  # mark each call right or wrong (training data for later)
+wtmate brief latest                  # brief.md to paste into a Claude chat for better protocols
+wtmate --mock review my_match.mp4    # test the model path with fake models
+wtmate plan                          # model mode only: Major's plan, rewrites Drill's lessons
 wtmate bench latest --limit 40       # face-off: several Drill models on the same footage
 wtmate live                          # optional: live calls during a match
 wtmate pages                         # rebuild all pages
@@ -103,7 +113,11 @@ measure with `wtmate bench --batch 1`.
 
 ```
 wtmate/
-  drill.py      Drill: frame reads and calls (offline batches, live single frames)
+  protocols.py  protocol files: conditions, priorities, the rules engine
+  hud.py        HUD readers: bars, colours, minimap dots, OCR (no AI)
+  local.py      free Drill: HUD + protocols (+ optional local vision model), firing log, labels
+  local_major.py free Major: review from protocol firings
+  drill.py      model Drill: frame reads and calls (offline batches, live single frames)
   major.py      Major: AAR per match, improvement plan across matches
   models.py     provider slots: anthropic, openai_compat, mock
   profiles.py   game profiles (built-ins + loader for your own .toml)
@@ -116,7 +130,8 @@ wtmate/
   telemetry.py  the game's own local map page (live mode only)
   capture.py    screenshots + screen recording (live mode only)
   voice.py      text to speech (live mode only)
-profiles/                 extra game profiles (Mech Havoc draft)
+profiles/                 extra game profiles (Mech Havoc)
+protocols/                protocol files per game (Mech Havoc starter set)
 tools/fake_wt_server.py   pretend War Thunder map server for testing live mode
 tests/                    `pytest -q`
 ```

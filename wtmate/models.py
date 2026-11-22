@@ -132,10 +132,12 @@ class OpenAICompatProvider(Provider):
         req = urllib.request.Request(self.cfg.base_url.rstrip("/") + "/chat/completions",
                                      data=json.dumps(body).encode(), headers=headers)
         start = time.perf_counter()
-        with urllib.request.urlopen(req, timeout=60) as resp:
+        with urllib.request.urlopen(req, timeout=self.cfg.timeout_s) as resp:
             out = json.loads(resp.read())
         latency = time.perf_counter() - start
-        text = out["choices"][0]["message"]["content"]
+        text = out["choices"][0]["message"]["content"].strip()
+        if text.startswith("```"):  # some local models wrap JSON in a code fence
+            text = text.split("\n", 1)[1].rsplit("```", 1)[0]
         usage = out.get("usage", {})
         return Result(json.loads(text), latency, self.cfg.model,
                       usage.get("prompt_tokens", 0), usage.get("completion_tokens", 0))
@@ -218,7 +220,9 @@ def _frame_times(parts):
     return times
 
 
-def make_provider(cfg: ModelCfg) -> Provider:
+def make_provider(cfg: ModelCfg) -> Provider | None:
+    if cfg.provider == "none":
+        return None
     if cfg.provider == "anthropic":
         return AnthropicProvider(cfg)
     if cfg.provider == "openai_compat":

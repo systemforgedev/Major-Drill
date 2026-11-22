@@ -1,12 +1,14 @@
 [project]
 name = "wtmate"
 version = "0.1.0"
-description = "Screen-only AI teammate for War Thunder: Drill gives fast calls, Major reviews your matches."
+description = "Screen-only game teammate: Drill gives fast calls from protocols, Major reviews your matches."
 requires-python = ">=3.11"
-dependencies = ["anthropic>=0.80", "pillow"]
+dependencies = ["pillow", "numpy"]
 
 [project.optional-dependencies]
 live = ["mss", "pyttsx3"]
+ocr = ["pytesseract"]
+cloud = ["anthropic>=0.80"]
 dev = ["pytest"]
 
 [project.scripts]
