@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Career overview</title>
+<style>
+:root{--bg:#0f1214;--panel:#171b1f;--line:#2a3036;--ink:#e8ecef;--quiet:#9aa5ae;--accent:#5aa9e6;--warn:#e0a030}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{padding:16px 20px;border-bottom:1px solid var(--line)}
+h1{font-size:18px;margin:0}
+main{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(280px,1fr);gap:16px;padding:16px 20px}
+@media (max-width:900px){main{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;overflow-x:auto}
+.panel h2{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--quiet);margin:0 0 8px}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--quiet);font-weight:500;font-size:12px}
+a{color:var(--accent)}
+.bars div{display:grid;grid-template-columns:minmax(120px,190px) 1fr 30px;gap:8px;align-items:center;margin:4px 0;font-size:12px}
+.bars i{display:block;height:8px;background:var(--warn);border-radius:4px}
+#heat{width:100%;aspect-ratio:1;display:block;background:#0b0e10;border-radius:8px}
+.muted{color:var(--quiet)}
+.stack>*+*{margin-top:16px}
+</style>
+</head>
+<body>
+<header><h1>Career overview</h1><span class="muted" id="sub"></span></header>
+<main>
+  <section class="panel"><h2>Matches</h2>
+    <table><thead><tr><th>Match</th><th>Length</th><th>K / D</th><th>Calls</th><th>Fix next</th></tr></thead>
+    <tbody id="rows"></tbody></table></section>
+  <section class="stack">
+    <div class="panel"><h2>Your repeat mistakes</h2><div class="bars" id="habits"></div></div>
+    <div class="panel"><h2>Where you spend time (all matches)</h2><canvas id="heat"></canvas></div>
+    <div class="panel"><h2>Drill's lessons learned</h2><ul id="lessons"></ul></div>
+  </section>
+</main>
+<script>
+const D = __DATA__;
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmt = s => `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`;
+$('sub').textContent = ` ${D.matches.length} matches recorded`;
+$('rows').innerHTML = D.matches.map(m => `<tr><td><a href="${esc(m.href)}">${esc(m.id)}</a></td>
+  <td>${fmt(m.duration_s)}</td><td>${m.kills} / ${m.deaths}</td><td>${m.calls}</td>
+  <td>${m.reviewed ? esc(m.top3[0] || '') : '<span class="muted">not reviewed yet</span>'}</td></tr>`).join('')
+  || '<tr><td colspan="5" class="muted">No matches yet.</td></tr>';
+const max = Math.max(1, ...D.habits.map(h => h[1]));
+$('habits').innerHTML = D.habits.map(([k, n]) =>
+  `<div><span>${esc(k)}</span><i style="width:${Math.round(100 * n / max)}%"></i><span>${n}</span></div>`).join('')
+  || '<p class="muted">Review a few matches to see patterns.</p>';
+$('lessons').innerHTML = D.lessons.map(r => `<li>${esc(r)}</li>`).join('') || '<li class="muted">Empty for now.</li>';
+function drawHeat() {
+  const c = $('heat'), r = devicePixelRatio || 1, w = c.clientWidth, h = c.clientHeight;
+  c.width = w * r; c.height = h * r; const g = c.getContext('2d'); g.scale(r, r);
+  if (!D.grid.length) return;
+  const n = Math.max(4, ...D.grid.map(x => Math.max(x.col, x.row) + 1)), cw = w / n, ch = h / n;
+  const mx = Math.max(...D.grid.map(x => x.n));
+  g.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--line');
+  for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) g.strokeRect(i * cw, j * ch, cw, ch);
+  for (const x of D.grid) { g.fillStyle = `rgba(255,150,40,${0.15 + 0.75 * x.n / mx})`; g.fillRect(x.col * cw + 1, x.row * ch + 1, cw - 2, ch - 2); }
+}
+drawHeat(); addEventListener('resize', drawHeat);
+</script>
+</body>
+</html>

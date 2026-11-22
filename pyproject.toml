@@ -1,0 +1,23 @@
+[project]
+name = "wtmate"
+version = "0.1.0"
+description = "Screen-only AI teammate for War Thunder: Drill gives fast calls, Major reviews your matches."
+requires-python = ">=3.11"
+dependencies = ["anthropic>=0.80", "pillow"]
+
+[project.optional-dependencies]
+live = ["mss", "pyttsx3"]
+dev = ["pytest"]
+
+[project.scripts]
+wtmate = "wtmate.cli:main"
+
+[tool.setuptools]
+packages = ["wtmate"]
+
+[tool.setuptools.package-data]
+wtmate = ["assets/*.html"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"

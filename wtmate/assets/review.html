@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Match review</title>
+<style>
+:root{--bg:#0f1214;--panel:#171b1f;--line:#2a3036;--ink:#e8ecef;--quiet:#9aa5ae;--accent:#5aa9e6;
+--death:#e5534b;--kill:#57ab5a;--call:#5aa9e6;--mistake:#e0a030;--radius:10px}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;gap:16px;align-items:baseline}
+header h1{font-size:18px;margin:0 12px 0 0}
+header a{color:var(--quiet)}
+.kpis{display:flex;gap:10px;flex-wrap:wrap}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:6px 12px}
+.kpi b{font-size:18px;display:block}
+.kpi span{color:var(--quiet);font-size:12px}
+main{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(300px,1fr);gap:16px;padding:16px 20px}
+@media (max-width:900px){main{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:12px}
+.panel h2{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--quiet);margin:0 0 8px}
+.screen{position:relative;background:#000;border-radius:8px;overflow:hidden;aspect-ratio:16/9}
+.screen video,.screen img{width:100%;height:100%;object-fit:contain;display:block}
+.now{display:flex;justify-content:space-between;color:var(--quiet);font-size:12px;margin:8px 2px}
+#timeline{width:100%;height:118px;display:block;cursor:pointer;margin-top:6px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;color:var(--quiet);font-size:12px;margin-top:6px}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:middle}
+#heat{width:100%;aspect-ratio:1;display:block;border-radius:8px;background:#0b0e10}
+ol,ul{margin:0;padding-left:20px}
+li{margin:4px 0}
+.mistake{border-left:3px solid var(--mistake);padding:6px 10px;margin:8px 0;background:#1d2126;border-radius:0 8px 8px 0;cursor:pointer}
+.mistake:hover{background:#232830}
+.mistake .t{color:var(--mistake);font-weight:600;margin-right:6px}
+.mistake small{color:var(--quiet);display:block}
+.bars div{display:grid;grid-template-columns:150px 1fr 44px;gap:8px;align-items:center;margin:3px 0;font-size:12px}
+.bars i{display:block;height:8px;background:var(--accent);border-radius:4px}
+.muted{color:var(--quiet)}
+.stack>*+*{margin-top:16px}
+</style>
+</head>
+<body>
+<header>
+  <h1 id="title">Match review</h1>
+  <div class="kpis" id="kpis"></div>
+  <a href="../index.html">All matches</a>
+</header>
+<main>
+  <section class="stack">
+    <div class="panel">
+      <div class="screen" id="screen"></div>
+      <div class="now"><span id="nowTime">0:00</span><span id="nowObs"></span></div>
+      <canvas id="timeline"></canvas>
+      <div class="legend">
+        <span><i class="dot" style="background:var(--death)"></i>death</span>
+        <span><i class="dot" style="background:var(--kill)"></i>kill</span>
+        <span><i class="dot" style="background:var(--call)"></i>teammate call</span>
+        <span><i class="dot" style="background:var(--mistake)"></i>mistake (click to jump)</span>
+      </div>
+    </div>
+    <div class="panel"><h2>Where your time went</h2><div class="bars" id="bars"></div></div>
+  </section>
+  <section class="stack">
+    <div class="panel"><h2>After-action report</h2><p id="summary" class="muted"></p>
+      <h2 style="margin-top:12px">Fix next match</h2><ol id="top3"></ol>
+      <h2 style="margin-top:12px">Good plays</h2><ul id="good"></ul></div>
+    <div class="panel"><h2 id="heatTitle">Heatmap</h2><canvas id="heat"></canvas>
+      <p class="muted" id="heatNote" style="margin:8px 0 0;font-size:12px"></p></div>
+    <div class="panel"><h2>Mistakes</h2><div id="mistakes"></div></div>
+  </section>
+</main>
+<script>
+const D = __DATA__, FRAMES = __FRAMES__, MEDIA = __MEDIA__;
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt = s => `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`;
+const dur = Math.max(D.duration_s || 1, 1);
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+$('title').textContent = 'Match ' + D.id;
+const kpi = (v, l) => `<div class="kpi"><b>${v}</b><span>${l}</span></div>`;
+$('kpis').innerHTML = kpi(fmt(dur), 'length') + kpi(D.kills.length, 'kills') + kpi(D.deaths.length, 'deaths')
+  + kpi(D.calls.length, 'teammate calls') + kpi(D.mistakes.length, 'mistakes found');
+
+// ---- player: video if we have it, otherwise the sampled frames ----
+let now = 0, player = null, img = null;
+if (MEDIA.video) {
+  player = document.createElement('video');
+  player.src = MEDIA.video; player.controls = true; player.preload = 'metadata';
+  player.addEventListener('timeupdate', () => setNow(player.currentTime, false));
+  $('screen').appendChild(player);
+} else {
+  img = document.createElement('img'); img.alt = 'frame';
+  $('screen').appendChild(img);
+}
+function nearestFrame(t) {
+  let best = null;
+  for (const f of FRAMES) if (!best || Math.abs(f.t - t) < Math.abs(best.t - t)) best = f;
+  return best;
+}
+function nearestObs(t) {
+  let best = null;
+  for (const o of D.observations) if (o.t <= t + 1 && (!best || o.t > best.t)) best = o;
+  return best;
+}
+function seek(t) { if (player) { player.currentTime = t; player.play?.(); } setNow(t, true); }
+function setNow(t, fromSeek) {
+  now = t;
+  if (img) { const f = nearestFrame(t); if (f) img.src = f.src; }
+  $('nowTime').textContent = fmt(t) + ' / ' + fmt(dur);
+  const o = nearestObs(t);
+  $('nowObs').textContent = o ? `${o.situation}${o.grid ? ' · ' + o.grid : ''}${o.threat ? ' · ' + o.threat : ''}` : '';
+  drawTimeline(); drawHeat();
+}
+
+// ---- timeline ----
+const SIT_COLORS = {'spawning':'#3b4650','driving to position':'#2f5d7c','holding position':'#3d6b4a',
+ 'in a firefight':'#8a3b36','flanking':'#6b4f8a','retreating':'#7a6a2f','capping':'#2f7a72',
+ 'dead or spectating':'#222','menu or loading':'#1a1a1a','unclear':'#30363c'};
+const tl = $('timeline');
+function drawTimeline() {
+  const r = devicePixelRatio || 1, w = tl.clientWidth, h = tl.clientHeight;
+  tl.width = w * r; tl.height = h * r;
+  const g = tl.getContext('2d'); g.scale(r, r); g.clearRect(0, 0, w, h);
+  const X = t => 8 + (t / dur) * (w - 16);
+  g.font = '11px system-ui'; g.fillStyle = css('--quiet');
+  const lanes = [['situation', 10], ['events', 40], ['calls', 64], ['mistakes', 88]];
+  // situation band
+  const obs = D.observations;
+  obs.forEach((o, i) => {
+    const t1 = i + 1 < obs.length ? obs[i + 1].t : dur;
+    g.fillStyle = SIT_COLORS[o.situation] || '#30363c';
+    g.fillRect(X(o.t), 10, Math.max(1, X(t1) - X(o.t)), 18);
+  });
+  // track line for lanes
+  g.strokeStyle = css('--line');
+  for (const [, y] of lanes.slice(1)) { g.beginPath(); g.moveTo(8, y + 8); g.lineTo(w - 8, y + 8); g.stroke(); }
+  const dot = (t, y, c, rad = 5) => { g.fillStyle = c; g.beginPath(); g.arc(X(t), y + 8, rad, 0, 7); g.fill(); };
+  D.deaths.forEach(t => dot(t, 40, css('--death')));
+  D.kills.forEach(t => dot(t, 40, css('--kill')));
+  D.calls.forEach(c => { g.fillStyle = css('--call'); g.fillRect(X(c.t) - 1, 64, 2, 16); });
+  D.mistakes.forEach(m => {
+    const x = X(m.t), y = 96; g.fillStyle = css('--mistake');
+    g.beginPath(); g.moveTo(x, y - 7); g.lineTo(x + 7, y); g.lineTo(x, y + 7); g.lineTo(x - 7, y); g.fill();
+  });
+  // ticks
+  g.fillStyle = css('--quiet');
+  const step = dur > 1200 ? 300 : dur > 400 ? 120 : 60;
+  for (let t = 0; t <= dur; t += step) g.fillText(fmt(t), Math.min(X(t), w - 30), h - 2);
+  // playhead
+  g.strokeStyle = css('--ink'); g.lineWidth = 1.5; g.beginPath(); g.moveTo(X(now), 4); g.lineTo(X(now), h - 14); g.stroke();
+}
+tl.addEventListener('click', e => {
+  const r = tl.getBoundingClientRect(); const t = ((e.clientX - r.left - 8) / (r.width - 16)) * dur;
+  seek(Math.max(0, Math.min(dur, t)));
+});
+
+// ---- heatmap ----
+const heat = $('heat');
+let mapImg = null;
+if (MEDIA.map) { mapImg = new Image(); mapImg.src = MEDIA.map; mapImg.onload = () => drawHeat(); }
+function drawHeat() {
+  const r = devicePixelRatio || 1, w = heat.clientWidth, h = heat.clientHeight;
+  heat.width = w * r; heat.height = h * r;
+  const g = heat.getContext('2d'); g.scale(r, r); g.clearRect(0, 0, w, h);
+  if (mapImg && mapImg.complete) { g.globalAlpha = 0.55; g.drawImage(mapImg, 0, 0, w, h); g.globalAlpha = 1; }
+  if (D.track.length) {
+    // precise positions (live mode with game telemetry)
+    $('heatTitle').textContent = 'Heatmap · your exact positions';
+    $('heatNote').textContent = 'From the game\'s own map feed. Red crosses mark deaths.';
+    for (const p of D.track) {
+      const grd = g.createRadialGradient(p.x * w, p.y * h, 0, p.x * w, p.y * h, 18);
+      grd.addColorStop(0, 'rgba(255,170,40,0.10)'); grd.addColorStop(1, 'rgba(255,170,40,0)');
+      g.fillStyle = grd; g.fillRect(p.x * w - 18, p.y * h - 18, 36, 36);
+    }
+    const p = D.track.filter(q => q.t <= now).at(-1);
+    if (p) { g.fillStyle = css('--accent'); g.beginPath(); g.arc(p.x * w, p.y * h, 5, 0, 7); g.fill(); }
+    D.deaths.forEach(t => { const q = D.track.filter(z => z.t <= t).at(-1); if (q) cross(g, q.x * w, q.y * h); });
+    return;
+  }
+  // coarse grid squares read from the minimap (upload mode)
+  $('heatTitle').textContent = 'Heatmap · minimap grid squares';
+  if (!D.grid.length) { $('heatNote').textContent = 'No minimap grid readings yet.'; return; }
+  const cols = Math.max(...D.grid.map(c => c.col)) + 1, rows = Math.max(...D.grid.map(c => c.row)) + 1;
+  const n = Math.max(cols, rows, 4), cw = w / n, ch = h / n, max = Math.max(...D.grid.map(c => c.n));
+  g.strokeStyle = css('--line'); g.font = '11px system-ui'; g.textAlign = 'center';
+  for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) g.strokeRect(i * cw, j * ch, cw, ch);
+  for (const c of D.grid) {
+    g.fillStyle = `rgba(255,150,40,${0.15 + 0.75 * c.n / max})`;
+    g.fillRect(c.col * cw + 1, c.row * ch + 1, cw - 2, ch - 2);
+  }
+  g.fillStyle = css('--quiet');
+  for (let i = 0; i < n; i++) { g.fillText(String(i + 1), i * cw + cw / 2, 12); }
+  g.textAlign = 'left';
+  for (let j = 0; j < n; j++) { g.fillText(String.fromCharCode(65 + j), 3, j * ch + ch / 2 + 4); }
+  const o = nearestObs(now); const m = o && /^([A-Za-z])\s*-?\s*(\d{1,2})$/.exec(o.grid || '');
+  if (m) { g.strokeStyle = css('--accent'); g.lineWidth = 2;
+    g.strokeRect((+m[2] - 1) * cw + 2, (m[1].toUpperCase().charCodeAt(0) - 65) * ch + 2, cw - 4, ch - 4); }
+  $('heatNote').textContent = 'Read from the minimap in your recording, so it is approximate. Brighter = more time spent.';
+}
+function cross(g, x, y) { g.strokeStyle = css('--death'); g.lineWidth = 2; g.beginPath();
+  g.moveTo(x - 5, y - 5); g.lineTo(x + 5, y + 5); g.moveTo(x + 5, y - 5); g.lineTo(x - 5, y + 5); g.stroke(); }
+
+// ---- debrief ----
+$('summary').textContent = D.summary || 'No after-action report yet. Run: wtmate debrief <match folder>';
+$('top3').innerHTML = D.top3.map(s => `<li>${esc(s)}</li>`).join('') || '<li class="muted">Waiting for debrief</li>';
+$('good').innerHTML = D.good_plays.map(s => `<li>${esc(s)}</li>`).join('') || '<li class="muted">-</li>';
+$('mistakes').innerHTML = D.mistakes.map((m, i) => `<div class="mistake" data-t="${m.t}">
+  <span class="t">${fmt(m.t)}</span><b>${esc(m.category)}</b><br>${esc(m.what_happened)}
+  <small>Better: ${esc(m.better_option)}</small></div>`).join('') || '<p class="muted">None found yet.</p>';
+document.querySelectorAll('.mistake').forEach(el => el.addEventListener('click', () => seek(Math.max(0, +el.dataset.t - 5))));
+$('bars').innerHTML = Object.entries(D.situations).map(([k, v]) =>
+  `<div><span>${esc(k)}</span><i style="width:${Math.round(v * 100)}%"></i><span>${Math.round(v * 100)}%</span></div>`).join('');
+
+addEventListener('resize', () => { drawTimeline(); drawHeat(); });
+setNow(0, true);
+</script>
+</body>
+</html>

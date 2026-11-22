@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Model face-off</title>
+<style>
+:root{--bg:#0f1214;--panel:#171b1f;--line:#2a3036;--ink:#e8ecef;--quiet:#9aa5ae;--good:#57ab5a;--accent:#5aa9e6;--warn:#e0a030}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{padding:16px 20px;border-bottom:1px solid var(--line)}
+h1{font-size:18px;margin:0}
+section{padding:16px 20px;overflow-x:auto}
+table{border-collapse:collapse;width:100%}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--quiet);font-weight:500;font-size:12px;position:sticky;top:0;background:var(--bg)}
+td.num{font-variant-numeric:tabular-nums}
+img{width:220px;border-radius:6px;display:block}
+.call{font-weight:600}
+.match{color:var(--good)}
+.muted{color:var(--quiet);font-size:12px}
+.key{color:var(--warn);font-weight:600}
+.best{color:var(--good);font-weight:600}
+</style>
+</head>
+<body>
+<header><h1>Model face-off</h1><span class="muted">Same footage, different teammates. Answer key = Major's review.</span></header>
+<section><table id="scores"></table></section>
+<section><table id="moments"></table></section>
+<script>
+const SCORES = __SCORES__, RUNS = __RUNS__, FRAMES = __FRAMES__, KEY = __KEY__;
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmt = s => `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`;
+const names = Object.keys(SCORES);
+const cols = [['call_accuracy','Call accuracy',1,'pct'],['death_recall','Death recall',1,'pct'],['grid_match','Minimap read',1,'pct'],
+  ['calls_per_min','Calls / min (yap)',-1,''],['p50_s','Lag p50 (s)',-1,''],['p90_s','Lag p90 (s)',-1,'']];
+const best = {};
+for (const [k,,dir] of cols) { const v = names.map(n => SCORES[n][k]).filter(x => x != null);
+  if (v.length) best[k] = dir > 0 ? Math.max(...v) : Math.min(...v); }
+const show = (v, kind) => v == null ? '<span class="muted">n/a</span>' : kind === 'pct' ? Math.round(v * 100) + '%' : v;
+document.getElementById('scores').innerHTML = `<tr><th>Model</th>${cols.map(c => `<th>${c[1]}</th>`).join('')}</tr>` +
+  names.map(n => SCORES[n].error ? `<tr><td>${esc(n)}</td><td colspan="${cols.length}" class="muted">failed: ${esc(SCORES[n].error)}</td></tr>` :
+   `<tr><td>${esc(n)}<div class="muted">${esc(SCORES[n].provider)} · ${esc(SCORES[n].model)}</div></td>${cols.map(([k,,,kind]) =>
+   `<td class="num ${SCORES[n][k] === best[k] && names.length > 1 ? 'best' : ''}">${show(SCORES[n][k], kind)}</td>`).join('')}</tr>`).join('');
+const runNames = Object.keys(RUNS);
+const byT = Object.fromEntries(runNames.map(n => [n, Object.fromEntries(RUNS[n].map(o => [o.t, o]))]));
+const keyAt = t => KEY.find(k => Math.abs(k.t - t) <= 6);
+const rows = FRAMES.filter(f => keyAt(f.t) || runNames.some(n => (byT[n][f.t]?.call || 'none') !== 'none'));
+document.getElementById('moments').innerHTML = `<tr><th>Moment</th><th>Major says</th>${runNames.map(n => `<th>${esc(n)}</th>`).join('')}</tr>` +
+  rows.map(f => { const k = keyAt(f.t);
+    return `<tr><td><img src="${esc(f.src)}" alt="" loading="lazy"><span class="muted">${fmt(f.t)}</span></td>
+      <td>${k ? `<span class="key">${esc(k.call)}</span>` : '<span class="muted">-</span>'}</td>
+      ${runNames.map(n => { const o = byT[n][f.t]; if (!o) return '<td class="muted">-</td>';
+        const hit = k && o.call === k.call;
+        return `<td><span class="call ${hit ? 'match' : ''}">${esc(o.call)}</span> <span class="muted">${(o.confidence ?? 0).toFixed(2)}</span><div class="muted">${esc(o.reason)}</div></td>`; }).join('')}</tr>`; }).join('')
+  || '<tr><td class="muted">No calls in this clip.</td></tr>';
+</script>
+</body>
+</html>
