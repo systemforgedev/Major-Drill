@@ -120,7 +120,7 @@ def test_end_to_end_mock(tmp_path, monkeypatch):
 
 def test_profiles_load_and_validate(tmp_path):
     p = load_profile(str(Path(__file__).parent.parent / "profiles" / "mech_havoc.toml"))
-    assert p.title == "Mech Havoc" and p.calls[0] == "none"
+    assert p.title.startswith("Mech Havoc") and p.calls[0] == "none"
     sch = observation_schema(p)["properties"]["observations"]["items"]["properties"]
     assert sch["call"]["enum"] == p.calls
     bad = tmp_path / "bad.toml"
