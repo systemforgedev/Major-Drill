@@ -143,5 +143,5 @@ def test_other_game_keeps_its_own_folder(tmp_path, monkeypatch):
     main(["--mock", "--no-open", "--game", profile, "review", str(video)])
     root = tmp_path / "matches" / "mech_havoc"
     debrief = json.loads(next(root.glob("*/debrief.json")).read_text())
-    assert debrief["mistakes"][0]["category"] == "fought at low armor"
+    assert debrief["mistakes"][0]["category"] == "stood still under fire"
     assert not (tmp_path / "matches" / "war_thunder").exists()

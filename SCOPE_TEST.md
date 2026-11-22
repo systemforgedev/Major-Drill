@@ -5,7 +5,7 @@ comes out, and that it gets more useful over a few runs. About an hour at your P
 
 **Game: Mech Havoc first** (single player, no terms-of-service questions). Add
 `game = "profiles/mech_havoc.toml"` to `wtmate.toml`. "Match" below means one run or mission.
-The Mech Havoc profile is a draft written without seeing the HUD, so Step 0b fixes it.
+The Mech Havoc profile is based on its Steam page (top-down mech shooter, missions and waves), not real screenshots, so Step 0b checks it.
 
 Write your answers in the boxes as you go. Each step says what counts as a pass.
 

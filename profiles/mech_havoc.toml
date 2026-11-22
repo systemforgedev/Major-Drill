@@ -1,19 +1,21 @@
-# DRAFT profile for Mech Havoc. Written without seeing the game's HUD yet:
-# fix screen_guide, calls and mistakes once we have a few screenshots.
+# Profile for Mech Havoc (Steam app 3237920, Early Access): a top-down, twin-stick mech
+# shooter played in missions with waves of robots. Based on the store page only, so
+# check screen_guide and calls against a few real screenshots and fix what's wrong.
 # Use it with:  wtmate --game profiles/mech_havoc.toml review my_run.mp4
 key = "mech_havoc"
-title = "Mech Havoc"
+title = "Mech Havoc (top-down mech shooter)"
 teammate = "co-pilot"
-screen_guide = """- Mech status: armor or hull, heat, energy, ammo and cooldown bars. Watch for overheating and low armor.
-- Radar or minimap if there is one: enemy markers and objectives.
-- The main view: enemies, cover, line of fire, whether the mech is moving or standing still.
-- Death, mission-failed or loading screens mean the run ended or restarted."""
-calls = ["none", "back off", "find cover", "watch your heat", "reload now", "repair now",
-         "focus the closest enemy", "watch your flank", "keep moving", "go for the objective"]
-situations = ["moving to objective", "in combat", "boss fight", "low armor", "overheating",
-              "repairing or resupplying", "in a menu or cutscene", "dead or loading", "unclear"]
-events = ["none", "death", "kill", "big hit taken", "checkpoint", "objective done"]
-mistakes = ["fought at low armor", "overheated in a fight", "stood still under fire", "got surrounded",
-            "ran out of ammo or energy", "wrong target first", "ignored the warning sign",
-            "rushed into an unknown area", "other"]
-grid_hint = "Grid square on the radar or minimap if it has a grid, like 'D4'. Otherwise empty."
+screen_guide = """- Top-down view: the player's mech is near the centre; enemies, cover, walls and destructible buildings around it.
+- Health, armor or energy bars and weapon cooldowns, wherever the HUD shows them. Low health means back off.
+- Waves of enemy robots, tanks and drones. Watch for being surrounded or enemies arriving from off-screen edges.
+- Support abilities: artillery strikes, turrets, drones and missile barrages. Notice when they are ready but unused.
+- Mission objective text, wave counters and mission-complete or mission-failed screens."""
+calls = ["none", "keep moving", "back off", "kite them", "watch your flank", "use your artillery",
+         "drop a turret", "send the drones", "focus the big one", "grab the pickup", "go for the objective"]
+situations = ["moving to objective", "fighting a wave", "boss or heavy enemy", "surrounded", "low health",
+              "between waves", "in a menu or upgrade screen", "mission failed or loading", "unclear"]
+events = ["none", "death", "kill", "big hit taken", "wave cleared", "objective done", "mission complete"]
+mistakes = ["stood still under fire", "got surrounded", "fought at low health", "held support abilities too long",
+            "wrong target first", "chased into a bad spot", "ignored the objective", "ignored a pickup",
+            "other"]
+grid_hint = "Leave empty unless the game shows a minimap with a lettered grid."
