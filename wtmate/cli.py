@@ -12,6 +12,7 @@ from .config import load_config
 from .match import Match
 from .memory import Memory
 from .models import make_provider
+from .profiles import BUILTIN, load_profile
 
 
 def _match(cfg, ref: str) -> Match:
@@ -48,6 +49,11 @@ def cmd_check(cfg, args):
         print(f"  [{'ok' if good else '!!'}] {what}" + (f"  -> {hint}" if hint and not good else ""))
 
     print("wtmate environment check")
+    try:
+        p = load_profile(cfg.game)
+        line(True, f"game profile: {p.title}")
+    except Exception as e:
+        line(False, f"game profile {cfg.game!r}", str(e))
     line(sys.version_info >= (3, 11), f"Python {sys.version.split()[0]}", "install Python 3.11 or newer")
     line(bool(shutil.which(cfg.ffmpeg)), "ffmpeg", "install ffmpeg and make sure it is on PATH")
     line(bool(shutil.which(cfg.ffprobe)), "ffprobe", "comes with ffmpeg")
@@ -90,12 +96,13 @@ def cmd_review(cfg, args):
     match = ingest_video(cfg, args.video, args.label or "", copy=not args.no_copy)
     print(f"[ingest] {len(match.frames())} frames -> {match.root}")
     memory = Memory(cfg.matches_dir)
-    stats = observe_match(match, make_provider(cfg.fast), memory, cfg.ingest.batch_size, _progress)
+    profile = load_profile(cfg.game)
+    stats = observe_match(match, make_provider(cfg.fast), memory, profile, cfg.ingest.batch_size, _progress)
     print(f"[drill] done: {stats}")
     if not args.no_debrief:
         print(f"[major] reviewing with {cfg.deep.model} (this can take a minute)...")
-        d = debrief_match(match, make_provider(cfg.deep), memory)
-        print("[major] fix next match:")
+        d = debrief_match(match, make_provider(cfg.deep), memory, profile)
+        print("[major] fix next time:")
         for i, s in enumerate(d.get("top3", []), 1):
             print(f"   {i}. {s}")
     page = build_review(match, cfg.live.min_confidence)
@@ -108,7 +115,7 @@ def cmd_debrief(cfg, args):
     from .review import build_index, build_review
 
     match = _match(cfg, args.match)
-    d = debrief_match(match, make_provider(cfg.deep), Memory(cfg.matches_dir))
+    d = debrief_match(match, make_provider(cfg.deep), Memory(cfg.matches_dir), load_profile(cfg.game))
     for i, s in enumerate(d.get("top3", []), 1):
         print(f"{i}. {s}")
     build_review(match, cfg.live.min_confidence)
@@ -119,7 +126,7 @@ def cmd_plan(cfg, args):
     from .major import plan_improvement
     from .review import build_index
 
-    plan = plan_improvement(cfg.matches_dir, make_provider(cfg.deep), Memory(cfg.matches_dir))
+    plan = plan_improvement(cfg.matches_dir, make_provider(cfg.deep), Memory(cfg.matches_dir), load_profile(cfg.game))
     print(plan["headline"])
     for f in plan["focus_areas"]:
         print(f"- {f['goal']}: {f['practice']} (measure: {f['measure']})")
@@ -133,11 +140,12 @@ def cmd_live(cfg, args):
     from .review import build_index, build_review
 
     memory = Memory(cfg.matches_dir)
-    match = run_live(cfg, make_provider(cfg.fast), memory,
+    profile = load_profile(cfg.game)
+    match = run_live(cfg, make_provider(cfg.fast), memory, profile,
                      max_duration_s=args.minutes * 60 if args.minutes else None)
     if not args.no_debrief and match.frames():
         print("[major] reviewing...")
-        debrief_match(match, make_provider(cfg.deep), memory)
+        debrief_match(match, make_provider(cfg.deep), memory, profile)
     page = build_review(match, cfg.live.min_confidence)
     build_index(cfg.matches_dir)
     _open(page, args.no_open)
@@ -162,8 +170,9 @@ def cmd_pages(cfg, args):
 
 
 def main(argv=None):
-    ap = argparse.ArgumentParser(prog="wtmate", description="War Thunder AI teammate: Drill (fast) and Major (deep).")
+    ap = argparse.ArgumentParser(prog="wtmate", description="AI game teammate: Drill (fast calls) and Major (deep review).")
     ap.add_argument("--config", help="path to wtmate.toml (default: ./wtmate.toml if present)")
+    ap.add_argument("--game", help=f"game profile: {', '.join(BUILTIN)}, or a .toml path (overrides the config)")
     ap.add_argument("--mock", action="store_true", help="use fake models: free dry run, no API calls")
     ap.add_argument("--no-open", action="store_true", help="don't open pages in the browser")
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -189,6 +198,10 @@ def main(argv=None):
 
     args = ap.parse_args(argv)
     cfg = load_config(args.config)
+    if args.game:
+        cfg.game = args.game
+    # Each game keeps its own matches, habits and lessons.
+    cfg.matches_dir = str(Path(cfg.matches_dir) / load_profile(cfg.game).key)
     if args.mock:
         cfg.fast.provider = cfg.deep.provider = "mock"
         for c in cfg.contenders:

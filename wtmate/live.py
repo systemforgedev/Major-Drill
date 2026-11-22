@@ -52,11 +52,12 @@ class CallGate:
         return True, "ok"
 
 
-def run_live(cfg: Config, drill: Provider, memory: Memory, frame_source=None,
+def run_live(cfg: Config, drill: Provider, memory: Memory, profile, frame_source=None,
              max_duration_s: float | None = None, stop_event: threading.Event | None = None) -> Match:
     """Run one match. frame_source() -> jpeg bytes; defaults to the screen."""
     stop_event = stop_event or threading.Event()
-    tel = Telemetry(cfg.telemetry.url) if cfg.telemetry.enabled else None
+    # The local map feed is War Thunder only; other games run screen-only.
+    tel = Telemetry(cfg.telemetry.url) if cfg.telemetry.enabled and profile.key == "war_thunder" else None
     if tel and not tel.available():
         print("[live] game map feed not found at", cfg.telemetry.url, "- continuing with screen only")
         tel = None
@@ -122,7 +123,7 @@ def run_live(cfg: Config, drill: Provider, memory: Memory, frame_source=None,
 
     def ask_drill(t_capture: float, jpeg: bytes):
         try:
-            obs, res = observe(drill, memory, [(t_capture, jpeg)])
+            obs, res = observe(drill, memory, [(t_capture, jpeg)], profile)
             if not obs:
                 return
             o = obs[0]

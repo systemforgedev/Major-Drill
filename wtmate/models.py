@@ -14,7 +14,6 @@ import urllib.request
 from dataclasses import dataclass
 
 from .config import ModelCfg
-from .schema import CALLS, DEBRIEF_SCHEMA, OBSERVATION_SCHEMA, PLAN_SCHEMA
 
 
 @dataclass
@@ -149,11 +148,13 @@ class MockProvider(Provider):
         self.rng = random.Random(seed)
 
     def complete_json(self, system, parts, schema):
-        if schema is OBSERVATION_SCHEMA:
-            data = {"observations": [self._obs(t) for t in _frame_times(parts)]}
-        elif schema is DEBRIEF_SCHEMA:
-            data = self._debrief(parts)
-        elif schema is PLAN_SCHEMA:
+        props = schema.get("properties", {})
+        if "observations" in props:
+            item = props["observations"]["items"]["properties"]
+            data = {"observations": [self._obs(t, item) for t in _frame_times(parts)]}
+        elif "top3" in props:
+            data = self._debrief(props["mistakes"]["items"]["properties"]["category"]["enum"])
+        elif "drill_lessons" in props:
             data = {"headline": "Mock plan: you die to flanks after holding one spot too long.",
                     "death_patterns": [{"where": "D4", "why": "Flanked from the left while static", "matches_seen": 2}],
                     "focus_areas": [{"goal": "Check the minimap every 10 seconds", "why": "Most deaths came from the side",
@@ -166,35 +167,36 @@ class MockProvider(Provider):
             raise ValueError("MockProvider does not know this schema")
         return Result(data, 0.05, "mock")
 
-    def _obs(self, t):
+    def _obs(self, t, item):
         r = self.rng
+        calls, sits, events = item["call"]["enum"], item["situation"]["enum"], item["event"]["enum"]
         dead = r.random() < 0.06
         col, row = "ABCDEFGH"[int(t / 40) % 8], 1 + int(t / 25) % 8
-        call = "none" if r.random() < 0.6 else r.choice(CALLS[1:])
+        call = "none" if r.random() < 0.6 else r.choice(calls[1:])
         return {
             "t": t, "alive": not dead,
-            "situation": "dead or spectating" if dead else r.choice(["holding position", "in a firefight", "driving to position"]),
+            "situation": r.choice(sits),
             "minimap_grid": "" if dead else f"{col}{row}",
             "threat": "" if r.random() < 0.5 else "enemy tank on the left ridge",
-            "event": "death" if dead else ("kill" if r.random() < 0.05 else "none"),
+            "event": "death" if dead else (events[2] if r.random() < 0.05 else "none"),
             "hypotheses": [{"guess": "enemy flanking left", "likelihood": 0.6},
                            {"guess": "enemy holding the ridge", "likelihood": 0.3}],
             "call": call, "confidence": round(r.uniform(0.4, 0.95), 2),
             "reason": "red marker near left flank",
         }
 
-    def _debrief(self, parts):
+    def _debrief(self, cats):
         return {
             "summary": "Mock debrief. You spent long stretches in one spot and died twice to flanks.",
             "mistakes": [{
-                "t": 120.0, "category": "ignored minimap threat",
+                "t": 120.0, "category": cats[0],
                 "what_happened": "Two enemies showed on the left of the minimap and you stayed put.",
                 "better_option": "Check the minimap every 10 seconds and pull back behind cover.",
                 "hypotheses_checked": [
                     {"hypothesis": "Out-gunned head on", "verdict": "rejected", "evidence": "Shot came from the side."},
                     {"hypothesis": "Flanked unseen", "verdict": "supported", "evidence": "Minimap showed red on the left 15 s earlier."}],
             }, {
-                "t": 300.0, "category": "stayed in one spot too long",
+                "t": 300.0, "category": cats[min(2, len(cats) - 1)],
                 "what_happened": "Held the same bush for 90 seconds after firing.",
                 "better_option": "Move after two shots.", "hypotheses_checked": [],
             }],

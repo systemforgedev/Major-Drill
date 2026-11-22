@@ -12,18 +12,16 @@ from pathlib import Path
 from .match import Match
 from .memory import Memory
 from .models import Image, Provider, Text
-from .schema import CALLS, OBSERVATION_SCHEMA
+from .profiles import GameProfile
+from .schema import observation_schema
 
-SYSTEM = """You are Drill, a calm, experienced War Thunder squadmate watching the player's screen.
+SYSTEM = """You are Drill, a calm, experienced {teammate} in {game}, watching the player's screen.
 For each frame, read the situation the way a good teammate would and decide whether to say
 one short call. You only see what the player sees. Never guess at hidden enemy positions
 beyond what the minimap, kill feed and screen show.
 
 How to read a frame:
-- Minimap (usually a corner): the player's arrow and grid square, red enemy markers, capture points.
-- Kill feed and hit messages: deaths, kills, the player's own damage.
-- The 3D view: cover, open ground, visible enemies, whether the player is moving.
-- A respawn or vehicle-select screen means the player is dead or spectating.
+{screen_guide}
 
 Choosing a call:
 - Prefer "none". Speak only when it would change what the player does in the next 10 seconds.
@@ -36,8 +34,9 @@ Choosing a call:
 """
 
 
-def system_prompt(memory: Memory) -> str:
-    return SYSTEM.format(calls=", ".join(f'"{c}"' for c in CALLS), memory=memory.prompt_block())
+def system_prompt(memory: Memory, profile: GameProfile) -> str:
+    return SYSTEM.format(teammate=profile.teammate, game=profile.title, screen_guide=profile.screen_guide,
+                         calls=", ".join(f'"{c}"' for c in profile.calls), memory=memory.prompt_block())
 
 
 def _parts_for(frames: list[tuple[float, bytes]]) -> list:
@@ -49,9 +48,9 @@ def _parts_for(frames: list[tuple[float, bytes]]) -> list:
     return parts
 
 
-def observe(provider: Provider, memory: Memory, frames: list[tuple[float, bytes]]):
+def observe(provider: Provider, memory: Memory, frames: list[tuple[float, bytes]], profile: GameProfile):
     """One request for one or more frames. Returns (observations, Result)."""
-    res = provider.complete_json(system_prompt(memory), _parts_for(frames), OBSERVATION_SCHEMA)
+    res = provider.complete_json(system_prompt(memory, profile), _parts_for(frames), observation_schema(profile))
     obs = res.data.get("observations", [])
     # Re-anchor timestamps to the frames we sent, in case the model drifted.
     for o, (t, _) in zip(obs, frames):
@@ -59,8 +58,8 @@ def observe(provider: Provider, memory: Memory, frames: list[tuple[float, bytes]
     return obs, res
 
 
-def observe_match(match: Match, provider: Provider, memory: Memory, batch_size: int = 8,
-                  progress=None) -> dict:
+def observe_match(match: Match, provider: Provider, memory: Memory, profile: GameProfile,
+                  batch_size: int = 8, progress=None) -> dict:
     """Run the fast tier over every frame of a match. Writes observations.jsonl."""
     out = match.root / "observations.jsonl"
     if out.exists():
@@ -69,7 +68,7 @@ def observe_match(match: Match, provider: Provider, memory: Memory, batch_size: 
     latencies, per_frame = [], []
     for i in range(0, len(frames), batch_size):
         chunk = [(t, Path(p).read_bytes()) for t, p in frames[i:i + batch_size]]
-        obs, res = observe(provider, memory, chunk)
+        obs, res = observe(provider, memory, chunk, profile)
         latencies.append(res.latency_s)
         per_frame.append(res.latency_s / max(1, len(chunk)))
         for o in obs:

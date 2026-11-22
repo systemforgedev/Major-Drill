@@ -1,4 +1,4 @@
-# wtmate: an AI squadmate for War Thunder
+# wtmate: an AI teammate for any game (War Thunder first)
 
 Record a match, hand it over, and get back a timeline of what happened, a heatmap of where you
 spent time and died, and a short after-action report (AAR) on why you lost and what to fix next.
@@ -11,6 +11,21 @@ Two roles do the work:
 
 Both roles are plug-in slots. Put Claude, a local open model (Qwen, Keye, anything served by Ollama,
 LM Studio, llama.cpp or vLLM) or your own bot behind either one.
+
+## Games
+
+Everything game-specific lives in a **game profile**: how to read the screen, what Drill may say,
+and which mistakes Major tags. Built in: `war_thunder` and `generic_action`. Your own game is a
+TOML file, for example [`profiles/mech_havoc.toml`](profiles/mech_havoc.toml) (a draft).
+
+```
+wtmate --game profiles/mech_havoc.toml review my_run.mp4
+```
+
+Each game keeps its own matches, habits and lessons under `matches/<game>/`.
+
+Roadmap: prove it on a single-player game (Mech Havoc), then multiplayer, then War Thunder with
+real data, then a pitch to Gaijin.
 
 ## Tiers
 
@@ -57,7 +72,7 @@ wtmate live                          # optional: live calls during a match
 wtmate pages                         # rebuild all pages
 ```
 
-Pages open in your browser: `matches/<match>/review.html` (one match) and `matches/index.html` (career).
+Pages open in your browser: `matches/<game>/<match>/review.html` (one match) and `matches/<game>/index.html` (career).
 
 Any recording works: ShadowPlay, OBS, Xbox Game Bar, or a capture of a server replay. Longer
 recordings cost more; one frame every 3 seconds is the default (`[ingest] frame_every_s`).
@@ -91,6 +106,7 @@ wtmate/
   drill.py      Drill: frame reads and calls (offline batches, live single frames)
   major.py      Major: AAR per match, improvement plan across matches
   models.py     provider slots: anthropic, openai_compat, mock
+  profiles.py   game profiles (built-ins + loader for your own .toml)
   ingest.py     recording -> match folder + sampled frames (ffmpeg)
   memory.py     habit counts + Drill's lessons-learned file
   stats.py      numbers for the pages (deaths, kills, heatmap, time split)
@@ -100,7 +116,8 @@ wtmate/
   telemetry.py  the game's own local map page (live mode only)
   capture.py    screenshots + screen recording (live mode only)
   voice.py      text to speech (live mode only)
-tools/fake_wt_server.py   pretend game server for testing live mode
+profiles/                 extra game profiles (Mech Havoc draft)
+tools/fake_wt_server.py   pretend War Thunder map server for testing live mode
 tests/                    `pytest -q`
 ```
 

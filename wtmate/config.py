@@ -54,6 +54,7 @@ class VoiceCfg:
 
 @dataclass
 class Config:
+    game: str = "war_thunder"   # built-in profile name or path to a profile .toml
     player_name: str = ""       # your in-game nickname, helps spot your deaths in the kill feed
     matches_dir: str = "matches"
     ffmpeg: str = "ffmpeg"

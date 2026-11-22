@@ -18,7 +18,7 @@ from .drill import latency_stats, observe
 from .match import Match
 from .memory import Memory
 from .models import make_provider
-from .schema import CALLS
+from .profiles import GameProfile, load_profile
 
 WINDOW_S = 6.0  # a call within this many seconds of Major's moment counts
 
@@ -36,21 +36,21 @@ def contender_cfgs(cfg: Config) -> list[tuple[str, ModelCfg]]:
     return out
 
 
-def expected_calls(debrief: dict) -> list[tuple[float, str]]:
+def expected_calls(debrief: dict, calls: list[str]) -> list[tuple[float, str]]:
     """Major's verdicts become the answer key."""
     out = []
     for g in debrief.get("call_grades", []):
-        if g["grade"] == "right" and g["call"] in CALLS:
+        if g["grade"] == "right" and g["call"] in calls:
             out.append((g["t"], g["call"]))
-        elif g.get("should_have_said") in CALLS and g["should_have_said"] != "none":
+        elif g.get("should_have_said") in calls and g["should_have_said"] != "none":
             out.append((g["t"], g["should_have_said"]))
     return out
 
 
 def score(candidate: list[dict], reference: list[dict], debrief: dict, duration_s: float,
-          min_conf: float = 0.6) -> dict:
+          calls: list[str], min_conf: float = 0.6) -> dict:
     spoken = [o for o in candidate if o.get("call", "none") != "none" and o.get("confidence", 0) >= min_conf]
-    key = expected_calls(debrief)
+    key = expected_calls(debrief, calls)
     hits = sum(1 for t, c in key if any(o["call"] == c and abs(o["t"] - t) <= WINDOW_S for o in spoken))
     ref_deaths = [o["t"] for o in reference if o.get("event") == "death"]
     caught = sum(1 for t in ref_deaths if any(o.get("event") == "death" and abs(o["t"] - t) <= WINDOW_S
@@ -78,6 +78,7 @@ def run_bench(cfg: Config, match: Match, batch_size: int = 1, limit: int | None 
     duration = (frames[-1][0] - frames[0][0] + cfg.ingest.frame_every_s) if frames else 1
     reference = [r for r in reference if r["t"] <= frames[-1][0] + 0.01] if frames else []
     memory = Memory(cfg.matches_dir)
+    profile = load_profile(cfg.game)
     out_dir = match.root / "bench"
     out_dir.mkdir(exist_ok=True)
     results = {}
@@ -90,23 +91,23 @@ def run_bench(cfg: Config, match: Match, batch_size: int = 1, limit: int | None 
         try:
             for i in range(0, len(frames), batch_size):
                 chunk = [(t, Path(p).read_bytes()) for t, p in frames[i:i + batch_size]]
-                obs, res = observe(provider, memory, chunk)
+                obs, res = observe(provider, memory, chunk, profile)
                 obs_all += obs
                 lat.append(res.latency_s / len(chunk))
         except Exception as e:
             progress(f"[bench] {name} failed: {e}")
             results[name] = {"error": str(e)}
             continue
-        s = score(obs_all, reference, debrief, duration) | latency_stats(lat) | {"model": mcfg.model,
+        s = score(obs_all, reference, debrief, duration, profile.calls) | latency_stats(lat) | {"model": mcfg.model,
                                                                                "provider": mcfg.provider}
         results[name] = s
         (out_dir / f"{_slug(name)}.jsonl").write_text("\n".join(json.dumps(o) for o in obs_all), encoding="utf-8")
     (out_dir / "scores.json").write_text(json.dumps(results, indent=2), encoding="utf-8")
-    build_compare(match)
+    build_compare(match, profile)
     return results
 
 
-def build_compare(match: Match) -> Path:
+def build_compare(match: Match, profile: GameProfile) -> Path:
     """Side-by-side page: what each model would have said at each moment."""
     from .review import _render
 
@@ -121,5 +122,5 @@ def build_compare(match: Match) -> Path:
     debrief = match.read_json("debrief.json", {}) or {}
     out = out_dir / "compare.html"
     out.write_text(_render("compare.html", SCORES=scores, RUNS=runs, FRAMES=frames,
-                           KEY=[{"t": t, "call": c} for t, c in expected_calls(debrief)]), encoding="utf-8")
+                           KEY=[{"t": t, "call": c} for t, c in expected_calls(debrief, profile.calls)]), encoding="utf-8")
     return out

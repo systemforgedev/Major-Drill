@@ -11,9 +11,10 @@ import json
 from .match import Match
 from .memory import Memory
 from .models import Image, Provider, Text
-from .schema import DEBRIEF_SCHEMA, MISTAKES, PLAN_SCHEMA
+from .profiles import GameProfile
+from .schema import PLAN_SCHEMA, debrief_schema
 
-SYSTEM = """You are Major, a patient War Thunder mentor reviewing one of the player's matches afterwards.
+SYSTEM = """You are Major, a patient {game} mentor reviewing one of the player's sessions afterwards.
 The player gets frustrated mid-match and finds it hard to remember what went wrong, so your job is
 to find the few repeat mistakes that matter and explain them simply and kindly.
 
@@ -25,6 +26,7 @@ Method:
 2. For each one, consider at least two competing explanations and mark each supported, rejected
    or unclear, citing what you saw (timestamp, minimap, kill feed). Don't guess beyond the evidence.
 3. Tag each mistake with one category from: {cats}.
+   Drill's allowed calls are: {calls}. Use only these in call_grades.should_have_said.
 4. top3: the three things to change next match, most important first, each under 15 words.
 5. good_plays: one to three things the player did well. Be specific.
 6. call_grades: grade Drill's calls that mattered (right, wrong, too late, unclear),
@@ -71,7 +73,8 @@ def pick_key_frames(match: Match, observations, events, limit: int = 24) -> list
     return [(t, lookup[t].read_bytes()) for t in picked]
 
 
-def debrief_match(match: Match, provider: Provider, memory: Memory, key_frames: int = 24) -> dict:
+def debrief_match(match: Match, provider: Provider, memory: Memory, profile: GameProfile,
+                  key_frames: int = 24) -> dict:
     observations = match.read("observations")
     events = match.read("events")
     calls = match.read("calls")
@@ -80,7 +83,8 @@ def debrief_match(match: Match, provider: Provider, memory: Memory, key_frames: 
     for t, jpeg in pick_key_frames(match, observations, events, key_frames):
         parts += [Text(f"key frame t={t:.1f}s"), Image(jpeg)]
     parts.append(Text("Write the debrief."))
-    res = provider.complete_json(SYSTEM.format(cats=", ".join(MISTAKES)), parts, DEBRIEF_SCHEMA)
+    system = SYSTEM.format(game=profile.title, cats=", ".join(profile.mistakes), calls=", ".join(profile.calls))
+    res = provider.complete_json(system, parts, debrief_schema(profile))
     debrief = res.data | {"_model": res.model, "_latency_s": round(res.latency_s, 1),
                           "_tokens": {"in": res.input_tokens, "out": res.output_tokens}}
     match.write_json("debrief.json", debrief)
@@ -88,7 +92,7 @@ def debrief_match(match: Match, provider: Provider, memory: Memory, key_frames: 
     return debrief
 
 
-PLAN_SYSTEM = """You are Major, a patient War Thunder mentor. You now see the player's whole history:
+PLAN_SYSTEM = """You are Major, a patient {game} mentor. You now see the player's whole history:
 every reviewed match, where they spent time and where they died (minimap grid squares), their repeat
 mistakes, and Drill's current lessons-learned file.
 
@@ -103,7 +107,7 @@ Write an improvement plan:
 Be kind and concrete; the player gets frustrated easily and needs a clear next step, not a lecture."""
 
 
-def plan_improvement(matches_dir, provider: Provider, memory: Memory) -> dict:
+def plan_improvement(matches_dir, provider: Provider, memory: Memory, profile: GameProfile) -> dict:
     """Major's cross-match plan. Rewrites Drill's lessons and writes plan.json."""
     from pathlib import Path
 
@@ -133,7 +137,7 @@ def plan_improvement(matches_dir, provider: Provider, memory: Memory) -> dict:
     parts = [Text("History, oldest first:\n" + "\n".join(lines)),
              Text("Habit counts and Drill's current lessons:\n" + memory.prompt_block()),
              Text("Write the plan.")]
-    res = provider.complete_json(PLAN_SYSTEM, parts, PLAN_SCHEMA)
+    res = provider.complete_json(PLAN_SYSTEM.format(game=profile.title), parts, PLAN_SCHEMA)
     plan = res.data | {"_model": res.model, "_matches": len(lines)}
     memory.set_lessons(plan.get("drill_lessons", []))
     out = Path(matches_dir) / "_profile" / "plan.json"

@@ -10,7 +10,8 @@ from wtmate.config import load_config
 from wtmate.live import CallGate
 from wtmate.memory import Memory
 from wtmate.models import Image, MockProvider, Text, _frame_times
-from wtmate.schema import OBSERVATION_SCHEMA
+from wtmate.profiles import GENERIC_ACTION, WAR_THUNDER, load_profile
+from wtmate.schema import observation_schema
 from wtmate.stats import dedupe_times, parse_grid
 from wtmate.telemetry import classify_feed, find_player
 
@@ -53,7 +54,7 @@ def test_find_player():
 def test_mock_reads_frame_labels():
     parts = [Text("frame t=3.0s"), Image(b"x"), Text("frame t=6.0s"), Image(b"y"), Text("go")]
     assert _frame_times(parts) == [3.0, 6.0]
-    res = MockProvider().complete_json("s", parts, OBSERVATION_SCHEMA)
+    res = MockProvider().complete_json("s", parts, observation_schema(WAR_THUNDER))
     assert [o["t"] for o in res.data["observations"]] == [3.0, 6.0]
 
 
@@ -71,11 +72,11 @@ def test_memory_counts_once_and_merges_lessons(tmp_path):
 def test_score_uses_major_as_answer_key():
     debrief = {"call_grades": [{"t": 30, "call": "pull back", "grade": "right", "should_have_said": ""},
                                {"t": 60, "call": "push now", "grade": "wrong", "should_have_said": "hold position"}]}
-    assert expected_calls(debrief) == [(30, "pull back"), (60, "hold position")]
+    assert expected_calls(debrief, WAR_THUNDER.calls) == [(30, "pull back"), (60, "hold position")]
     cand = [{"t": 27, "call": "pull back", "confidence": 0.9, "event": "none", "minimap_grid": "C3"},
             {"t": 60, "call": "push now", "confidence": 0.9, "event": "death", "minimap_grid": "C4"}]
     ref = [{"t": 27, "minimap_grid": "C3", "event": "none"}, {"t": 60, "minimap_grid": "C3", "event": "death"}]
-    s = score(cand, ref, debrief, duration_s=120)
+    s = score(cand, ref, debrief, duration_s=120, calls=WAR_THUNDER.calls)
     assert s["call_accuracy"] == 0.5 and s["death_recall"] == 1.0 and s["grid_match"] == 0.5
     assert s["calls_per_min"] == 1.0
 
@@ -102,15 +103,45 @@ def test_end_to_end_mock(tmp_path, monkeypatch):
     from wtmate.cli import main
 
     main(["--mock", "--no-open", "review", str(video), "--label", "test"])
-    match = next(p for p in (tmp_path / "m").iterdir() if p.is_dir() and p.name != "_profile")
+    root = tmp_path / "m" / "war_thunder"
+    match = next(p for p in root.iterdir() if p.is_dir() and p.name != "_profile")
     assert len(list((match / "frames").glob("*.jpg"))) == 15
     assert (match / "video.mp4").exists() and (match / "debrief.json").exists()
     html = (match / "review.html").read_text()
     assert "__DATA__" not in html and '"top3"' in html
-    assert (tmp_path / "m" / "index.html").exists()
+    assert (root / "index.html").exists()
     main(["--mock", "--no-open", "plan"])
-    assert json.loads((tmp_path / "m" / "_profile" / "plan.json").read_text())["drill_lessons"]
+    assert json.loads((root / "_profile" / "plan.json").read_text())["drill_lessons"]
     main(["--mock", "--no-open", "bench", "latest", "--limit", "6"])
     scores = json.loads((match / "bench" / "scores.json").read_text())
     assert set(scores) == {"drill (claude-haiku-5-5)", "rival"}
     assert "__SCORES__" not in (match / "bench" / "compare.html").read_text()
+
+
+def test_profiles_load_and_validate(tmp_path):
+    p = load_profile(str(Path(__file__).parent.parent / "profiles" / "mech_havoc.toml"))
+    assert p.title == "Mech Havoc" and p.calls[0] == "none"
+    sch = observation_schema(p)["properties"]["observations"]["items"]["properties"]
+    assert sch["call"]["enum"] == p.calls
+    bad = tmp_path / "bad.toml"
+    bad.write_text('title="x"\nteammate="y"\nscreen_guide="z"\ncalls=["go"]\nsituations=["a"]\nevents=["none","death"]\nmistakes=["other"]\n')
+    with pytest.raises(AssertionError):
+        load_profile(str(bad))
+    with pytest.raises(ValueError):
+        load_profile("no_such_game")
+
+
+@pytest.mark.skipif(not shutil.which("ffmpeg"), reason="needs ffmpeg")
+def test_other_game_keeps_its_own_folder(tmp_path, monkeypatch):
+    video = tmp_path / "run.mp4"
+    subprocess.run(["ffmpeg", "-loglevel", "error", "-f", "lavfi", "-i", "testsrc=size=320x180:rate=5",
+                    "-t", "12", str(video)], check=True)
+    monkeypatch.chdir(tmp_path)
+    from wtmate.cli import main
+
+    profile = str(Path(__file__).parent.parent / "profiles" / "mech_havoc.toml")
+    main(["--mock", "--no-open", "--game", profile, "review", str(video)])
+    root = tmp_path / "matches" / "mech_havoc"
+    debrief = json.loads(next(root.glob("*/debrief.json")).read_text())
+    assert debrief["mistakes"][0]["category"] == "fought at low armor"
+    assert not (tmp_path / "matches" / "war_thunder").exists()

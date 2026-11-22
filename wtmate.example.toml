@@ -1,5 +1,6 @@
 # Copy to wtmate.toml and edit. Every key is optional.
 
+game = "war_thunder"      # or "generic_action", or a profile file like "profiles/mech_havoc.toml"
 player_name = ""          # your in-game name (helps spot your kills and deaths in live mode)
 matches_dir = "matches"
 
