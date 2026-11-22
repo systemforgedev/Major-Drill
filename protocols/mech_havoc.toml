@@ -1,0 +1,322 @@
+# Mech Havoc protocols: what Drill says, and when. Plain if-then rules, no AI needed.
+#
+# How this file works (full guide: PROTOCOLS.md):
+#   [[detector]]  reads one fact off the screen (a number, a colour, minimap dots)
+#   [derived]     simple maths on facts, e.g. hp_pct = hp / hp_max
+#   [[protocol]]  situation -> call. Priority 1 is the most important; it wins.
+#
+# Boxes are [left, top, right, bottom] as fractions of the screen, measured on a
+# 1280x720 in-mission screenshot (reference.jpg). They scale to any resolution
+# with the same 16:9 layout. Check them with:
+#   wtmate --game profiles/mech_havoc.toml protocols test my_screenshot.png
+#
+# Facts marked (OCR) need Tesseract installed; without it those protocols just
+# stay quiet. Facts marked (vision) need a local vision model ("kev"); without it
+# they stay quiet too. Everything else works on any PC with nothing extra.
+
+game = "mech_havoc"
+
+[vision]
+extra = "Enemies are robots and mechs. Red or orange marks on the minimap (top right) are enemies; yellow chevrons are objectives."
+
+# ---------------------------------------------------------------- detectors ---
+
+[[detector]]
+name = "hud_box"            # the white HP box; it is only there during a mission
+type = "colour_share"
+box = [0.03, 0.035, 0.16, 0.075]
+colour = [235, 235, 235]
+tolerance = 35
+threshold = 0.5
+flag = "in_mission"
+note = "0.94 in a mission, 0.0 on the main menu."
+
+[[detector]]
+name = "hp"                 # (OCR) the number in the HP box, e.g. 360.0
+type = "ocr_number"
+box = [0.02, 0.05, 0.12, 0.08]
+
+[[detector]]
+name = "extraction_text"    # yellow "Extraction Available!" under the HP box
+type = "colour_share"
+box = [0.0, 0.10, 0.14, 0.125]
+colour = [210, 170, 60]
+tolerance = 60
+threshold = 0.04
+flag = "extraction_available"
+note = "0.15 when the text shows, under 0.01 without it."
+
+[[detector]]
+name = "enemies"            # orange-red marks on the minimap -> enemies_left/right/front/behind/total
+type = "blips"
+box = [0.892, 0.03, 0.994, 0.192]
+colour = [168, 70, 42]
+tolerance = 30
+min_size = 3
+note = "Screen up is 'front'. Found the one enemy mark (right) in reference.jpg."
+
+[[detector]]
+name = "objectives"         # yellow chevrons on the minimap
+type = "blips"
+box = [0.892, 0.03, 0.994, 0.192]
+colour = [235, 190, 40]
+tolerance = 45
+min_size = 2
+
+[[detector]]
+name = "mortar_bar"         # call-in 1 bar (Precision Mortar). Full white bar = ready.
+type = "bar"
+box = [0.016, 0.842, 0.127, 0.854]
+colour = [235, 235, 235]
+tolerance = 35
+threshold = 0.95
+flag = "mortar_ready"
+note = "Full (1.0) and 'Ready' in reference.jpg. Not yet checked while recharging."
+
+[[detector]]
+name = "turret_bar"         # call-in 2 (Static MG Turret)
+type = "bar"
+box = [0.016, 0.899, 0.127, 0.912]
+colour = [235, 235, 235]
+tolerance = 35
+threshold = 0.95
+flag = "turret_ready"
+
+[[detector]]
+name = "hmg_turret_bar"     # call-in 3 (Static HMG Turret)
+type = "bar"
+box = [0.016, 0.956, 0.127, 0.969]
+colour = [235, 235, 235]
+tolerance = 35
+threshold = 0.95
+flag = "hmg_turret_ready"
+
+[[detector]]
+name = "ammo1"              # (OCR) weapon 1 ammo, e.g. HMG 72
+type = "ocr_number"
+box = [0.797, 0.896, 0.835, 0.921]
+
+[[detector]]
+name = "ammo2"              # (OCR) weapon 2 ammo, e.g. Gauss Rifle 1
+type = "ocr_number"
+box = [0.797, 0.933, 0.835, 0.958]
+
+[[detector]]
+name = "screen_change"      # how much the middle of the screen changed since the last look
+type = "change"
+box = [0.3, 0.25, 0.7, 0.75]
+note = "Camera follows the mech, so a still screen usually means a still mech. Needs tuning on real footage."
+
+# ------------------------------------------------------------------ derived ---
+
+[derived]
+hp_pct = "hp / hp_max"            # hp_max = highest HP seen this session
+ammo1_pct = "ammo1 / ammo1_max"
+
+# ---------------------------------------------------------------- protocols ---
+# Priority 1 = say this even if Drill just spoke. Lower numbers win.
+
+[[protocol]]
+id = "surrounded"
+priority = 1
+when = ["in_mission", "enemies_left >= 1", "enemies_right >= 1", "enemies_behind >= 1"]
+call = "back off"
+say = "You're getting surrounded, break out"
+why = "Enemies on three sides of the minimap"
+situation = "surrounded"
+mistake = "got surrounded"
+tip = "Keep one side clear: back away from the pack before they close the circle."
+cooldown_s = 15
+
+[[protocol]]
+id = "low-hp-in-a-fight"
+priority = 1
+when = ["in_mission", "hp_pct < 0.35", "enemies_total >= 1"]
+call = "back off"
+say = "Low HP, back off"
+why = "Under a third of HP with enemies on the minimap"
+situation = "low health"
+mistake = "fought at low health"
+tip = "Under a third of HP, back off first and fight again from cover."
+hold_s = 1
+cooldown_s = 20
+
+[[protocol]]
+id = "big-hit"
+priority = 2
+when = ["in_mission", "d_hp_pct < -0.2"]
+call = "keep moving"
+say = "Big hit, keep moving"
+why = "Lost over a fifth of HP in about 3 seconds"
+event = "big hit taken"
+cooldown_s = 10
+
+[[protocol]]
+id = "right-flank"
+priority = 2
+when = ["in_mission", "enemies_right >= 1", "enemies_right > enemies_front"]
+call = "watch your flank"
+say = "Enemies on your right flank"
+why = "More minimap enemies to the right than ahead"
+situation = "fighting"
+cooldown_s = 20
+
+[[protocol]]
+id = "left-flank"
+priority = 2
+when = ["in_mission", "enemies_left >= 1", "enemies_left > enemies_front"]
+call = "watch your flank"
+say = "Enemies on your left flank"
+why = "More minimap enemies to the left than ahead"
+situation = "fighting"
+cooldown_s = 20
+
+[[protocol]]
+id = "behind"
+priority = 2
+when = ["in_mission", "enemies_behind >= 1", "enemies_behind > enemies_front"]
+call = "watch your flank"
+say = "Enemies behind you"
+why = "More minimap enemies behind than ahead"
+situation = "fighting"
+cooldown_s = 20
+
+[[protocol]]
+id = "dry-in-a-fight"
+priority = 2
+when = ["in_mission", "ammo1 == 0", "enemies_total >= 1"]
+call = "back off"
+say = "You're dry, back off and reload"
+why = "Main weapon empty with enemies near"
+situation = "reloading or out of ammo"
+mistake = "ran dry mid-fight"
+tip = "Reload in the quiet moments so you never hit zero mid-fight."
+cooldown_s = 15
+
+[[protocol]]
+id = "stood-still-under-fire"
+priority = 3
+when = ["in_mission", "enemies_total >= 2", "screen_change < 0.01"]
+call = "keep moving"
+say = "Keep moving"
+why = "Screen hasn't moved for 4 seconds with enemies close"
+mistake = "stood still under fire"
+tip = "Keep the mech moving in a fight; strafe between shots."
+hold_s = 4
+cooldown_s = 25
+
+[[protocol]]
+id = "mortar-unused"
+priority = 3
+when = ["in_mission", "mortar_ready", "enemies_total >= 3"]
+call = "call the mortar"
+say = "Mortar's ready, drop it on them (1)"
+why = "Mortar ready for 8 seconds with a pack on the minimap"
+mistake = "held call-ins too long"
+tip = "Use the mortar on any group of three or more; it recharges."
+hold_s = 8
+cooldown_s = 30
+
+[[protocol]]
+id = "turret-unused"
+priority = 4
+when = ["in_mission", "enemies_total >= 3"]
+when_any = ["turret_ready", "hmg_turret_ready"]
+call = "drop a turret"
+say = "Drop a turret (2 or 3)"
+why = "A turret was ready for 10 seconds during a fight"
+mistake = "held call-ins too long"
+tip = "Drop a turret at the start of every big fight."
+hold_s = 10
+cooldown_s = 40
+
+[[protocol]]
+id = "reload-in-the-quiet"
+priority = 4
+when = ["in_mission", "ammo1_pct < 0.3", "enemies_total == 0"]
+call = "reload now"
+say = "Quiet moment, reload now"
+why = "Under a third of a magazine and nothing on the minimap"
+good = "Reloaded in a quiet moment."
+cooldown_s = 30
+
+[[protocol]]
+id = "extraction-open"
+priority = 5
+when = ["in_mission", "extraction_available"]
+call = "none"
+why = "Extraction is available"
+event = "extraction available"
+situation = "objective done, extraction open"
+cooldown_s = 600
+
+[[protocol]]
+id = "extract-when-clear"
+priority = 4
+when = ["in_mission", "extraction_available", "enemies_total == 0"]
+call = "extract now"
+say = "Area's clear, go extract"
+why = "Extraction open and no enemies on the minimap for 15 seconds"
+hold_s = 15
+cooldown_s = 60
+
+[[protocol]]
+id = "late-to-extract"
+priority = 4
+when = ["in_mission", "extraction_available"]
+call = "extract now"
+say = "Extraction's been open a minute, head out"
+why = "Extraction open for over a minute"
+mistake = "late to extract"
+tip = "When extraction opens, head out unless an optional goal is worth it."
+hold_s = 60
+cooldown_s = 90
+
+[[protocol]]
+id = "in-menu"
+priority = 9
+when = ["not in_mission"]
+call = "none"
+why = "No HP box: menu, loading or results screen"
+situation = "in a menu or loadout screen"
+cooldown_s = 0
+
+# --- These need a local vision model (kev). They stay quiet without one. ---
+
+[[protocol]]
+id = "heavy-enemy"
+priority = 3
+when = ["in_mission", "heavy_enemy"]
+call = "focus the big one"
+say = "Big one, focus it"
+why = "Vision model sees a heavy enemy"
+situation = "heavy enemy or boss"
+cooldown_s = 30
+
+[[protocol]]
+id = "vision-right-flank"
+priority = 2
+when = ["in_mission", "threat_side == 'right'", "not enemies_right"]
+call = "watch your flank"
+say = "Enemies on your right flank"
+why = "Vision model sees enemies to the right that the minimap missed"
+cooldown_s = 20
+
+[[protocol]]
+id = "vision-left-flank"
+priority = 2
+when = ["in_mission", "threat_side == 'left'", "not enemies_left"]
+call = "watch your flank"
+say = "Enemies on your left flank"
+why = "Vision model sees enemies to the left that the minimap missed"
+cooldown_s = 20
+
+[[protocol]]
+id = "mission-failed"
+priority = 1
+when = ["alive == false"]
+call = "none"
+why = "Death or mission failed screen"
+event = "death"
+situation = "mission failed or loading"
+cooldown_s = 30
