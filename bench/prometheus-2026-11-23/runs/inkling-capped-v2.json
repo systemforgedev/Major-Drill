@@ -1,0 +1,312 @@
+{
+  "model": "Inkling-2-Mini-UD-Q4_K_XL.gguf",
+  "vision": "mmproj-F16.gguf",
+  "load_s": 9.7,
+  "think_budget": 256,
+  "frames": [
+    {
+      "file": "f1-training-range.jpg",
+      "t": 0,
+      "drill": {
+        "t": 0.0,
+        "alive": true,
+        "situation": "unclear",
+        "minimap_grid": "enemies clustered on right side of range, player aiming right",
+        "threat": "cluster of enemies to the right",
+        "event": "none",
+        "hypotheses": [
+          {
+            "guess": "Player is in a spawn/training range and should engage the clustered targets",
+            "likelihood": 0.5
+          },
+          {
+            "guess": "Player should spawn targets via [E] before engaging",
+            "likelihood": 0.3
+          },
+          {
+            "guess": "Extraction is available but enemies are present, so stay engaged",
+            "likelihood": 0.2
+          }
+        ],
+        "call": "focus the big one",
+        "confidence": 0.45,
+        "reason": "Enemies are clustered on the right and the player is already aiming at them; engaging the cluster is the most useful next step."
+      },
+      "drill_s": 9.06,
+      "coach": "You\u2019re at the \u201cBasic HIVE Outpost Replica\u201d with HP 360.0 and Extraction Available, aiming across the lit grid at a small cluster of enemies while \u201cSpawn Targets [E]\u201d is on screen. The most useful move in the next 10 seconds is to press E to spawn targets rather than chase, since extraction is already available and your Gauss Rifle is at 1 while the HMG has 72. Keep the mech aimed and safe, then use the HMG/call-ins as the targets engage.",
+      "coach_s": 5.91,
+      "tokens": {
+        "drill": 498,
+        "coach": 378,
+        "drill_thinking_chars": 960,
+        "coach_thinking_chars": 852
+      }
+    },
+    {
+      "file": "f2-engagement.jpg",
+      "t": 10,
+      "drill": {
+        "t": 10.0,
+        "alive": true,
+        "situation": "in a menu or loadout screen",
+        "minimap_grid": "minimap shows red enemy dots clustered on the right side",
+        "threat": "a group of enemies is grouped on the right side of the gridded arena",
+        "event": "extraction available",
+        "hypotheses": [
+          {
+            "guess": "The player should spawn the targets with E to begin the drill",
+            "likelihood": 0.5
+          },
+          {
+            "guess": "Enemies are clustered to the right and the player is aiming at them",
+            "likelihood": 0.35
+          },
+          {
+            "guess": "Player may want to engage the cluster rather than move",
+            "likelihood": 0.15
+          }
+        ],
+        "call": "focus the big one",
+        "confidence": 0.45,
+        "reason": "A prominent Spawn Targets [E] prompt and a cluster of enemies to the right suggest engaging the group; no single big one is clearly identifiable, so this is a low-confidence call."
+      },
+      "drill_s": 8.72,
+      "coach": "You're at the \"Spawn Targets [E]\" prompt in the Basic HIVE Outpost Replica with HP 360.0 and extraction already available, while a cluster of enemies (plus a larger mech at the far right edge) sits in the lit field ahead of you. The single most useful move in the next 10 seconds is to press E to spawn the targets, then engage them rather than extracting yet. Keep the HMG aimed at the cluster and use the ready call-ins (1/2/3) if the group presses in.",
+      "coach_s": 5.75,
+      "tokens": {
+        "drill": 539,
+        "coach": 382,
+        "drill_thinking_chars": 936,
+        "coach_thinking_chars": 889
+      }
+    },
+    {
+      "file": "f3-aim-lines.jpg",
+      "t": 20,
+      "drill": {
+        "t": 20.0,
+        "alive": true,
+        "situation": "in a menu or loadout screen",
+        "minimap_grid": "enemies clustered right of player",
+        "threat": "cluster of enemies to the right, line of sight clear",
+        "event": "none",
+        "hypotheses": [
+          {
+            "guess": "Player is in a training/replica area and is about to spawn or engage the clustered targets",
+            "likelihood": 0.6
+          },
+          {
+            "guess": "Player will press E to spawn targets and then engage",
+            "likelihood": 0.3
+          },
+          {
+            "guess": "Player will hold position and shoot the cluster",
+            "likelihood": 0.1
+          }
+        ],
+        "call": "none",
+        "confidence": 0.7,
+        "reason": "HP full, ammo healthy, enemies already in line of sight; no urgent need to change behavior"
+      },
+      "drill_s": 8.05,
+      "coach": "The player is in the \"Basic HIVE Outpost Replica\" area with HP 360.0 and extraction available, aiming at a cluster of enemies on the right inside the lit grid. A \"Spawn Targets [E]\" prompt is showing, and all three call-ins (Precision Mortar, Static MG Turret, Static HMG Turret) are Ready. The most useful move in the next 10 seconds is to engage the cluster with the HMG (72 rounds) rather than spawning targets, since the enemies are already in the aim line and ammo is healthy.",
+      "coach_s": 5.86,
+      "tokens": {
+        "drill": 496,
+        "coach": 389,
+        "drill_thinking_chars": 934,
+        "coach_thinking_chars": 887
+      }
+    },
+    {
+      "file": "f4-allies.jpg",
+      "t": 30,
+      "drill": {
+        "t": 30.0,
+        "alive": true,
+        "situation": "in a menu or loadout screen",
+        "minimap_grid": "minimap mostly empty with a yellow marker",
+        "threat": "no clear enemies visible; green starburst effects near blue boxes and right side",
+        "event": "extraction available",
+        "hypotheses": [
+          {
+            "guess": "player is in a training/spawn-target area and should spawn targets",
+            "likelihood": 0.5
+          },
+          {
+            "guess": "green starbursts are friendly/effects, not threats",
+            "likelihood": 0.3
+          },
+          {
+            "guess": "extraction is available but player is mid-setup",
+            "likelihood": 0.2
+          }
+        ],
+        "call": "none",
+        "confidence": 0.6,
+        "reason": "No immediate threat; the Spawn Targets prompt and extraction availability are the only notable cues, but no urgent action is needed in the next 10 seconds."
+      },
+      "drill_s": 8.41,
+      "coach": "The player is in a \"Basic HIVE Outpost Replica\" area with HP 360.0 and \"Extraction Available!\", aiming across a lit grid toward friendly cyan-glow units while a red enemy sits near the blue spawn boxes and another glows at the bottom edge; the center prompt reads \"Spawn Targets [E]\". The most useful move in the next 10 seconds is to press E to spawn targets rather than chase, since extraction is already available and the screen is set up for a target run.",
+      "coach_s": 5.67,
+      "tokens": {
+        "drill": 518,
+        "coach": 373,
+        "drill_thinking_chars": 976,
+        "coach_thinking_chars": 948
+      }
+    },
+    {
+      "file": "f5-street-fight.jpg",
+      "t": 40,
+      "drill": {
+        "t": 40.0,
+        "alive": true,
+        "situation": "fighting",
+        "minimap_grid": "125m, player near center-bottom, enemies/explosion on road to the right",
+        "threat": "enemy cluster on the road being suppressed, big explosion to the right",
+        "event": "big hit taken",
+        "hypotheses": [
+          {
+            "guess": "Player is suppressing/firing at a road-side target cluster; HMG slot shows 0 ammo while Gauss Rifle has 1",
+            "likelihood": 0.55
+          },
+          {
+            "guess": "The explosion is the result of player/ally fire and the fight is ongoing",
+            "likelihood": 0.3
+          },
+          {
+            "guess": "Player may need to reload the HMG soon",
+            "likelihood": 0.15
+          }
+        ],
+        "call": "reload now",
+        "confidence": 0.55,
+        "reason": "HMG slot reads 0 ammo and the player is mid-suppression; reloading before the next engagement is the useful call."
+      },
+      "drill_s": 8.51,
+      "coach": "You're on a road with a buddy firing a suppression/bombardment line across the lane; your Gauss Rifle is loaded (1) but the HMG slot shows 0 ammo. The artillery objective is still 0/4 and the mission timer is just started. In the next 10 seconds, keep the suppression going and reload the empty HMG (R) when safe rather than firing dry\u2014don't waste the Gauss Rifle on the buddy's shot.",
+      "coach_s": 5.55,
+      "tokens": {
+        "drill": 529,
+        "coach": 366,
+        "drill_thinking_chars": 823,
+        "coach_thinking_chars": 765
+      }
+    },
+    {
+      "file": "f6-street-a.jpg",
+      "t": 50,
+      "drill": {
+        "t": 50.0,
+        "alive": true,
+        "situation": "fighting",
+        "minimap_grid": "125m",
+        "threat": "explosion/fire on right side of road, mech aiming up-left",
+        "event": "big hit taken",
+        "hypotheses": [
+          {
+            "guess": "Enemy artillery/fire is landing on the right side of the road; player should keep moving/reposition rather than stand in the open",
+            "likelihood": 0.55
+          },
+          {
+            "guess": "Call-ins are all rearming, so support is not immediately available; reload/reposition is the priority",
+            "likelihood": 0.3
+          },
+          {
+            "guess": "Objective is Destroy Artillery (0/4); the right-side blast may be an artillery target being engaged",
+            "likelihood": 0.15
+          }
+        ],
+        "call": "keep moving",
+        "confidence": 0.6,
+        "reason": "Open road, active explosions and no ready support; moving is safer than standing still."
+      },
+      "drill_s": 8.45,
+      "coach": "The player is on a road under fire with a big explosion/smoke on the right and a bright impact in the middle of the lane; HP reads 360.0 and objectives show Destroy Artillery 0/4. The single most useful move is to keep moving/aiming away from the right-side blast and the central impact rather than lingering in the open lane. Ammo looks fine (Gauss Rifle 1, AC-20 Canister 1), so don't reload yet\u2014reposition and engage.",
+      "coach_s": 5.67,
+      "tokens": {
+        "drill": 530,
+        "coach": 375,
+        "drill_thinking_chars": 781,
+        "coach_thinking_chars": 862
+      }
+    },
+    {
+      "file": "f7-street-b.jpg",
+      "t": 54,
+      "drill": {
+        "t": 54.0,
+        "alive": true,
+        "situation": "low health",
+        "minimap_grid": "125m",
+        "threat": "none",
+        "event": "none",
+        "hypotheses": [
+          {
+            "guess": "Player is holding position on the road with Gauss Rifle loaded and BUO ready, likely waiting for a target or objective.",
+            "likelihood": 0.5
+          },
+          {
+            "guess": "The cyan cluster to the right is friendly/deployed and should not be engaged; enemies are not clearly visible on screen.",
+            "likelihood": 0.3
+          },
+          {
+            "guess": "Call-ins are all rearming, so support is not immediately available.",
+            "likelihood": 0.2
+          }
+        ],
+        "call": "none",
+        "confidence": 0.6,
+        "reason": "No immediate threat or objective prompt; support is rearming and the player is aiming at a bright light, so no urgent action is needed."
+      },
+      "drill_s": 8.21,
+      "coach": "The player is on a lit road with HP 360.0, aiming upward toward a bright spot, while a cyan-glowing friendly unit sits just ahead and the call-ins (AC-30, 155mm, Cannon) are all rearming. The mission objective is Destroy Artillery 0/4, with no enemies clearly engaged yet. In the next 10 seconds, keep moving/aiming toward the bright target area and use the Gauss Rifle (1) rather than waiting on rearming support.",
+      "coach_s": 5.7,
+      "tokens": {
+        "drill": 513,
+        "coach": 377,
+        "drill_thinking_chars": 727,
+        "coach_thinking_chars": 847
+      }
+    },
+    {
+      "file": "f8-street-c.jpg",
+      "t": 58,
+      "drill": {
+        "t": 58.0,
+        "alive": true,
+        "situation": "low health",
+        "minimap_grid": "road",
+        "threat": "none",
+        "event": "none",
+        "hypotheses": [
+          {
+            "guess": "Player is on a road with a friendly/cyan unit nearby and an enemy-ish marker to the right; call-ins are rearming, weapons loaded.",
+            "likelihood": 0.6
+          },
+          {
+            "guess": "Objective is artillery destruction (0/4); player should keep moving toward the objective rather than stop.",
+            "likelihood": 0.3
+          },
+          {
+            "guess": "No immediate threat; no call needed.",
+            "likelihood": 0.1
+          }
+        ],
+        "call": "keep moving",
+        "confidence": 0.55,
+        "reason": "No immediate threat visible, call-ins rearming, weapons loaded; keep advancing toward the artillery objective."
+      },
+      "drill_s": 8.31,
+      "coach": "The player is on a road with HP 360.0, aiming upward, with a friendly cyan-glow unit nearby and an enemy-looking unit to the right; objectives show Destroy Artillery 0/4 and Elimination 0/65, and the call-ins are rearming. The most useful move in the next 10 seconds is to engage/clear the visible enemy on the road rather than chase the dialogue or idle. Keep an eye on the HP and reload/rearm status before committing.",
+      "coach_s": 5.64,
+      "tokens": {
+        "drill": 515,
+        "coach": 373,
+        "drill_thinking_chars": 831,
+        "coach_thinking_chars": 812
+      }
+    }
+  ]
+}

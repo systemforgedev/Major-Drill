@@ -8,7 +8,7 @@ as the reference. No API key, nothing left the PC.
 
 ![The 8 frames](frames-sheet.jpg)
 
-## Verdict
+## Verdict (first run, v1)
 
 | | Qwen 3.8 27B (Q5) | Inkling 2 Mini (Q4) | Inkling, thinking capped at 256 |
 | --- | --- | --- | --- |
@@ -31,7 +31,49 @@ Inkling's 6/8 needs a caveat. On the quiet frames its wrong top picks fell below
 confidence bar, so Drill would have stayed silent, which happened to be right. The bar did the
 work, not the model.
 
-## Frame by frame
+## Rerun after the profile fixes (v2)
+
+The first run showed two misreads that both models shared, so the Mech Havoc profile's screen
+guide got two new lines: **cyan or blue glow = friendly (allies, your own turrets), red minimap
+dots = enemies**, and **single-shot weapons (Gauss Rifle, AC-20 Canister) show 1 when loaded,
+only 0 is empty**. The coach question now gets the same screen guide Drill does. Same 8 frames,
+same settings. Raw answers are in `runs/*-v2.json`.
+
+| | Qwen v1 → v2 | Inkling v1 → v2 | Inkling capped v1 → v2 |
+| --- | --- | --- | --- |
+| Live call right (0.6 bar) | 4 → **6** / 8 | 6 → 6 / 8 | 6 → 5 / 8 |
+| Top pick right or acceptable | 4 → **6** / 8 | 4 → 4 / 8 | 4 → 5 / 8 |
+| Treats friendly units as enemies | yes → **no** | yes → **no** | yes → **no** |
+| Says the Gauss "1" is nearly empty | 8 frames → **0** | 8 → **0** | 8 → **0** |
+| Says "reload the HMG" on f5 (HMG at 0) | no → no | no → **yes** | no → **yes** |
+| False events | 2 → 1 | 4 → 2 | 3 → 2 |
+| "situation" label wrong | 6 → 7 / 8 | 8 → 8 / 8 | 7 → 8 / 8 |
+| Sees the red minimap dots in f8 | no → no | no → no | no → no |
+| Seconds per Drill frame / coach answer | 3.9-6.5 / 1.2-1.8 | 9.7-18.9 / 9.9-18.3 | 8.0-9.1 / 5.6-5.9 |
+
+**What the fixes changed:**
+- Both fixes worked in every run. Nobody tells the player to back off from allies or shoot their
+  own turret any more. Inkling now says "don't fire into the cyan allies" on f4, and Qwen calls
+  them "your own deployed turrets, not threats". Nobody calls the Gauss empty; Inkling even
+  says "Gauss is at 1 (normal), don't reload yet".
+- With the Gauss noise gone, Inkling's f5 advice now matches the reference exactly: "reload the
+  empty HMG (R)". Capped Inkling found it too, but at 0.55 confidence Drill would stay quiet.
+- Qwen gained the most on calls (4 → 6). Its f4 "back off" and f6 "back off at low health" are
+  gone. On f8 its coach answer even says "you're just idling on the road, move forward to find
+  the artillery", which is the reference advice.
+
+**What they didn't change:**
+- The "situation" and "event" labels are still wrong most of the time. Qwen still calls live
+  play "menu" or "mission complete". Inkling still says "low health" or "menu" at full HP.
+  These fields should come from HUD readers, not the model.
+- Nobody sees the red minimap dots in f8. That's still the minimap HUD reader's job.
+- They still invent threats now and then. Qwen's f6 coach answer has an "enemy walker on the left".
+  Inkling's f8 answer treats a yellow ground marker as "the visible threat".
+
+The verdict stays the same. Prompt fixes in the profile are cheap and clearly help. Qwen is now
+a reasonable fast describer. Inkling gives the best advice but only fits the post-match review.
+
+## Frame by frame (v1, before the fixes)
 
 Reference = Claude's read. ✓ right, ~ acceptable, ✗ wrong. "(silent)" = below 0.6, Drill says nothing.
 
@@ -81,8 +123,9 @@ Reference = Claude's read. ✓ right, ~ acceptable, ✗ wrong. "(silent)" = belo
 2. **Post-match review (Major):** Inkling fits. 10 to 20 s per frame is fine after a match, and its
    HUD reading and advice are clearly better. Capping its thinking at 256 tokens halves the time
    and the advice is about as good.
-3. **Prompt fixes that cost nothing:** add "cyan glow = friendly", "Gauss and AC-20 show 1 when
-   loaded", and "the big mech labelled BUDDY is your helper" (mod only) to the profile.
+3. **Prompt fixes that cost nothing:** "cyan glow = friendly" and "Gauss and AC-20 show 1 when
+   loaded" are now in the profile (see v2). The Gauss line is still an inference from these
+   frames: check it once in a vanilla run.
 
 ## Limits of this test
 
@@ -108,6 +151,7 @@ Unsloth build `b12588-mix`, CUDA 13) on the RTX 5090, one at a time. Settings fo
 | Qwen | `models/qwen3.8-27b-huihui-q5/Huihui-Qwen3.8-27B-abliterated-Q5_K.gguf` (19.5 GB) | `mmproj-model-bf16.gguf` | yes, `enable_thinking=false` |
 | Inkling 2 Mini | `models/inkling-2-mini-unsloth/Inkling-2-Mini-UD-Q4_K_XL.gguf` (17.6 GB) | `mmproj-F16.gguf` | no, `reasoning_effort=none` is its minimum and still thinks ~1,000 tokens |
 
-Rerun: `python tools/prometheus_bench.py bench/prometheus-2026-11-23` (add
-`inkling --think-budget 256 --tag=-capped` for the capped run). Raw answers are in `runs/`,
+Rerun: `python tools/prometheus_bench.py bench/prometheus-2026-11-23 --tag=-v2` (add
+`inkling --think-budget 256 --tag=-capped-v2` for the capped run). v1 used the old screen
+guide and a coach question without it. Raw answers are in `runs/`,
 Claude's reference read in `reference.json`.

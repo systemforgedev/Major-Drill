@@ -6,7 +6,7 @@ model at a time, so both fit on one card. No API key, nothing leaves the PC.
 
 For every frame each model answers twice:
   drill  - Drill's real prompt and JSON schema (what live mode would say)
-  coach  - a plain question: what should the player do right now?
+  coach  - a plain question with the profile's screen guide: what should the player do right now?
 
 Usage:
   python tools/prometheus_bench.py bench/prometheus-2026-11-23
@@ -40,8 +40,9 @@ PROMETHEUS = Path(os.environ.get("PROMETHEUS_DIR", r"C:\Users\ivant\Documents\Ch
 TEMPLATE = {"qwen": {"enable_thinking": False}, "inkling": {"reasoning_effort": "none"}}
 
 COACH = """You are an experienced Mech Havoc player coaching a friend who is playing right now.
-Mech Havoc is a top-down mech shooter: the player's mech is near the centre, HP is top left,
-the minimap top right, call-ins (support, keys 1-3) bottom left, two weapons with ammo bottom right.
+How to read the screen:
+{screen_guide}
+
 Look at this screenshot. In 2 or 3 short sentences: what is happening, and the single most useful
 thing the player should do in the next 10 seconds. Only use what you can actually see."""
 
@@ -124,7 +125,7 @@ def run(folder: Path, keys: list[str], think_budget: int | None = None, tag: str
                     drill = json.loads(text)["observations"][0]
                 except Exception as e:  # keep the raw answer; a broken answer is a result too
                     drill = {"parse_error": str(e), "raw": text[:2000]}
-                coach, lat2, use2 = chat(base, key, None, [{"type": "text", "text": COACH}, image_part(jpeg)], None, 1500, think_budget)
+                coach, lat2, use2 = chat(base, key, None, [{"type": "text", "text": COACH.format(screen_guide=profile.screen_guide)}, image_part(jpeg)], None, 1500, think_budget)
                 rows.append({"file": f["file"], "t": f["t"], "drill": drill, "drill_s": lat,
                              "coach": coach, "coach_s": lat2,
                              "tokens": {"drill": use.get("completion_tokens"), "coach": use2.get("completion_tokens"),
