@@ -1,0 +1,50 @@
+[
+  {
+    "file": "f1-training-range.jpg",
+    "t": 0,
+    "note": "Training range, three targets spawned at the far wall, extraction open",
+    "source": "reference.jpg"
+  },
+  {
+    "file": "f2-engagement.jpg",
+    "t": 10,
+    "note": "Training range, HMG firing, a dozen targets bunched at 40-90 m",
+    "source": "engagement-live-before.jpg"
+  },
+  {
+    "file": "f3-aim-lines.jpg",
+    "t": 20,
+    "note": "Training range with Hephaestus aim-preview overlay (yellow lines, target labels)",
+    "source": "mechhavoc-preview.jpg"
+  },
+  {
+    "file": "f4-allies.jpg",
+    "t": 30,
+    "note": "Training range, green units glowing cyan near the player and far down the range",
+    "source": "aim-live-east.png"
+  },
+  {
+    "file": "f5-street-fight.jpg",
+    "t": 40,
+    "note": "Street mission 00:06, HMG empty, AutoMech BUDDY firing (Hephaestus mod overlay)",
+    "source": "automech-orders-proof-74956-suppress.png"
+  },
+  {
+    "file": "f6-street-a.jpg",
+    "t": 50,
+    "note": "Street mission 00:04, sequence frame 1 of 3",
+    "source": "saved-mixed-combat-26968-0.png"
+  },
+  {
+    "file": "f7-street-b.jpg",
+    "t": 54,
+    "note": "Street mission 00:08, sequence frame 2 of 3",
+    "source": "saved-mixed-combat-26968-1.png"
+  },
+  {
+    "file": "f8-street-c.jpg",
+    "t": 58,
+    "note": "Street mission 00:12, sequence frame 3 of 3",
+    "source": "saved-mixed-combat-26968-2.png"
+  }
+]
