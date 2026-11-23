@@ -1,0 +1,51 @@
+{
+  "reviewer": "Claude (reference read, full-size frames, no time limit)",
+  "frames": {
+    "f1-training-range.jpg": {
+      "facts": "Training range (Basic HIVE Outpost Replica). HP 360 full, Extraction Available. Mech on the left pad aiming at six practice targets at 50-60 m. HMG 72, Gauss Rifle 1. All three call-ins Ready (Precision Mortar, Static MG Turret, Static HMG Turret). No real threat.",
+      "best_call": "none",
+      "advice": "Safe practice range. Nothing urgent; if practising, try the Precision Mortar (1) on the six bunched targets."
+    },
+    "f2-engagement.jpg": {
+      "facts": "Same range, HMG down to 26 and firing. About a dozen targets bunched at 40-90 m, a larger one at the far right edge. HP full, call-ins Ready.",
+      "best_call": "call the mortar",
+      "acceptable": ["none", "reload later"],
+      "advice": "Targets are clumped: drop the Precision Mortar on the cluster. HMG is at 26, reload once this group is down."
+    },
+    "f3-aim-lines.jpg": {
+      "facts": "Same range as f1 with a Hephaestus aim-preview overlay (yellow lock line, red boxes and health labels on five targets). HP full, HMG 72, call-ins Ready.",
+      "best_call": "none",
+      "advice": "Range practice, the overlay is a tool preview, not the game. Nothing to call."
+    },
+    "f4-allies.jpg": {
+      "facts": "Range again, HMG 75. Small green units with a cyan glow: two right next to the player's pad and two far down the range at 80 m. Cyan glow marks friendly units in this game (Hephaestus labels them training allies). HP full, call-ins Ready.",
+      "best_call": "none",
+      "advice": "The glowing units are friendly, don't shoot them. Nothing urgent."
+    },
+    "f5-street-fight.jpg": {
+      "facts": "Real mission, 00:06. Objectives Destroy Artillery 0/4, Elimination 0/85. HP 360 full. Weapon 1 (HMG) shows 0 ammo, Gauss Rifle 1. Five call-ins Ready (fifth is a mod). The player's small mech is left by the streetlight; the big mech firing at a 'Suppress here' marker is the AutoMech BUDDY (Hephaestus mod). Minimap shows two blue objective marks to the east. No enemies visible.",
+      "best_call": "reload now",
+      "acceptable": ["hit the objective", "keep moving"],
+      "advice": "HMG is empty and nothing is shooting at you: reload now (R), then push east toward the artillery marks on the minimap."
+    },
+    "f6-street-a.jpg": {
+      "facts": "Mission 00:04, start of the same street mission. HP full. Call-ins all Rearming. Gauss Rifle 1, AC-20 Canister 1. A friendly turret (cyan glow) is being deployed ahead of the player ('BOB: Deploying defensive turret'). Smoke from an explosion at the right edge. Minimap: two blue objective marks east. No enemies on screen.",
+      "best_call": "none",
+      "acceptable": ["hit the objective", "keep moving"],
+      "advice": "Mission just started and call-ins are rearming. Start moving east toward the artillery objectives."
+    },
+    "f7-street-b.jpg": {
+      "facts": "Mission 00:08. Player mech has not moved since 00:04. Salvage counter went 0 to 6. Turret still deployed ahead. Call-ins still Rearming. No enemies on screen or minimap.",
+      "best_call": "keep moving",
+      "acceptable": ["hit the objective"],
+      "advice": "You've stood still for 4 seconds with nothing around: get moving east to the objectives."
+    },
+    "f8-street-c.jpg": {
+      "facts": "Mission 00:12. Player still in the same spot (8 s without moving). Red enemy dots now on the minimap to the east, near the blue objective marks. Call-ins Rearming (bar 2 about half). Nothing on screen yet.",
+      "best_call": "keep moving",
+      "acceptable": ["hit the objective"],
+      "advice": "Enemies are showing up on the minimap to the east by the objectives. Stop idling, move up behind your turret and face east; the aim line is pointing north, away from them."
+    }
+  },
+  "sequence_note": "f6-f8 are one 8-second stretch (mission timer 00:04, 00:08, 00:12). The real lesson there is 'stood still at mission start', which only shows up across frames. Each model saw one frame at a time, like Drill live does."
+}

@@ -1,0 +1,312 @@
+{
+  "model": "Inkling-2-Mini-UD-Q4_K_XL.gguf",
+  "vision": "mmproj-F16.gguf",
+  "load_s": 9.7,
+  "think_budget": 256,
+  "frames": [
+    {
+      "file": "f1-training-range.jpg",
+      "t": 0,
+      "drill": {
+        "t": 0.0,
+        "alive": true,
+        "situation": "in a menu or loadout screen",
+        "minimap_grid": "minimap shows player and a few marks",
+        "threat": "cluster of enemies on the right side of the field",
+        "event": "extraction available",
+        "hypotheses": [
+          {
+            "guess": "Player is about to spawn targets with E",
+            "likelihood": 0.5
+          },
+          {
+            "guess": "Player will engage the enemy cluster on the right",
+            "likelihood": 0.4
+          },
+          {
+            "guess": "Player will extract",
+            "likelihood": 0.1
+          }
+        ],
+        "call": "hit the objective",
+        "confidence": 0.45,
+        "reason": "Spawn Targets prompt is up and enemies are visible on the right; engaging the objective/targets is the immediate action."
+      },
+      "drill_s": 8.34,
+      "coach": "Your mech is holding near the spawn-target lane, aiming across the lit field at a tight cluster of enemy mechs on the right; HP is 360, extraction is available, and your Gauss Rifle is nearly dry (1 round) while the HMG has 72. The most useful move in the next 10 seconds is to focus the HMG on that cluster and finish/thin it out before it spreads or closes in, rather than switching to the nearly empty Gauss Rifle.",
+      "coach_s": 5.66,
+      "tokens": {
+        "drill": 485,
+        "coach": 367,
+        "drill_thinking_chars": 887,
+        "coach_thinking_chars": 877
+      }
+    },
+    {
+      "file": "f2-engagement.jpg",
+      "t": 10,
+      "drill": {
+        "t": 10.0,
+        "alive": true,
+        "situation": "reloading or out of ammo",
+        "minimap_grid": "enemies clustered right side, player near center-left of field",
+        "threat": "cluster of enemies to the right, Gauss Rifle nearly empty (1), HMG at 28",
+        "event": "none",
+        "hypotheses": [
+          {
+            "guess": "Player is about to engage the enemy cluster with the HMG while Gauss is nearly empty",
+            "likelihood": 0.5
+          },
+          {
+            "guess": "Player will reload the Gauss Rifle soon",
+            "likelihood": 0.3
+          },
+          {
+            "guess": "Player will spawn targets with E",
+            "likelihood": 0.2
+          }
+        ],
+        "call": "reload later",
+        "confidence": 0.55,
+        "reason": "Gauss Rifle has only 1 round, but HMG has 28 and enemies are clustered; reload can wait until the cluster is cleared or pressure eases."
+      },
+      "drill_s": 8.45,
+      "coach": "You're at the left edge of a lit gridded field with your mech aimed right, a thin targeting line reaching toward a cluster of enemy figures on the right; HP reads 360.0, Extraction is available, and your Gauss Rifle is nearly dry (1 round) while the HMG has 28. The most useful move in the next 10 seconds is to switch to the HMG and engage the clustered enemies rather than waste the last Gauss round, while keeping an eye on the extraction prompt.",
+      "coach_s": 5.77,
+      "tokens": {
+        "drill": 525,
+        "coach": 371,
+        "drill_thinking_chars": 830,
+        "coach_thinking_chars": 904
+      }
+    },
+    {
+      "file": "f3-aim-lines.jpg",
+      "t": 20,
+      "drill": {
+        "t": 20.0,
+        "alive": true,
+        "situation": "in a menu or loadout screen",
+        "minimap_grid": "player near left-center, enemies clustered to the right",
+        "threat": "cluster of enemies to the right being aimed at",
+        "event": "extraction available",
+        "hypotheses": [
+          {
+            "guess": "player is in a training/spawn area and should spawn targets",
+            "likelihood": 0.45
+          },
+          {
+            "guess": "player should engage the enemy cluster with the HMG",
+            "likelihood": 0.4
+          },
+          {
+            "guess": "player should extract now",
+            "likelihood": 0.15
+          }
+        ],
+        "call": "hit the objective",
+        "confidence": 0.45,
+        "reason": "Spawn Targets prompt is active and enemies are lined up to the right; HMG has plenty of ammo while Gauss is nearly empty."
+      },
+      "drill_s": 8.3,
+      "coach": "Your mech is holding near the spawn-target lane with HP at 360 and extraction available, while a cluster of marked targets sits in the lit grid to the right. Your Gauss Rifle is nearly empty (1 round) and the HMG has 72, so the priority is to engage/clear that cluster with the HMG rather than waste the last Gauss shot. In the next 10 seconds, aim at the marked cluster, fire the HMG, and keep moving toward extraction once they're down.",
+      "coach_s": 6.33,
+      "tokens": {
+        "drill": 500,
+        "coach": 369,
+        "drill_thinking_chars": 905,
+        "coach_thinking_chars": 906
+      }
+    },
+    {
+      "file": "f4-allies.jpg",
+      "t": 30,
+      "drill": {
+        "t": 30.0,
+        "alive": true,
+        "situation": "low health",
+        "minimap_grid": "125m",
+        "threat": "enemies in the lit grid to the right",
+        "event": "none",
+        "hypotheses": [
+          {
+            "guess": "Player is in a training/replica range and is about to spawn targets or engage the green markers on the right",
+            "likelihood": 0.5
+          },
+          {
+            "guess": "Gauss Rifle is nearly empty (1 round) and HMG has 75, so reload may be needed soon",
+            "likelihood": 0.3
+          },
+          {
+            "guess": "Extraction is available but the player is still engaged in the range",
+            "likelihood": 0.2
+          }
+        ],
+        "call": "reload later",
+        "confidence": 0.55,
+        "reason": "Gauss Rifle is nearly dry but HMG has 75 rounds and the player is still aiming at targets; no immediate need to reload now."
+      },
+      "drill_s": 9.02,
+      "coach": "Your mech is holding a firing line across the grid toward the right, with two glowing targets visible on the right and a low-ammo Gauss Rifle (1 round) alongside a 75-round HMG. Extraction is available and your call-ins are all ready. In the next 10 seconds, switch to the HMG and finish the targets on the right rather than burning the last Gauss round, then move toward extraction.",
+      "coach_s": 5.57,
+      "tokens": {
+        "drill": 513,
+        "coach": 353,
+        "drill_thinking_chars": 888,
+        "coach_thinking_chars": 874
+      }
+    },
+    {
+      "file": "f5-street-fight.jpg",
+      "t": 40,
+      "drill": {
+        "t": 40.0,
+        "alive": true,
+        "situation": "low health",
+        "minimap_grid": "road corridor",
+        "threat": "enemies on the road ahead",
+        "event": "big hit taken",
+        "hypotheses": [
+          {
+            "guess": "Primary weapon is empty and the player needs to reload soon",
+            "likelihood": 0.55
+          },
+          {
+            "guess": "Support suppression is active and the player should keep moving/hold position",
+            "likelihood": 0.3
+          },
+          {
+            "guess": "Gauss Rifle has only 1 round left, so ammo is nearly gone",
+            "likelihood": 0.15
+          }
+        ],
+        "call": "reload now",
+        "confidence": 0.6,
+        "reason": "Both weapon slots show very low/zero ammo (slot 1 at 0, Gauss Rifle at 1), so reloading is the most useful immediate action."
+      },
+      "drill_s": 8.13,
+      "coach": "Your mech is on the road firing a long beam into a smoke/explosion cluster marked \u201cSuppress here,\u201d with support call-ins ready and the artillery objective at 0/4. The Gauss Rifle shows only 1 round and the other weapon appears empty, so you\u2019re close to being out of firepower. In the next 10 seconds, keep suppressing that cluster and move/reposition to get a clearer angle or reload/switch rather than just holding the same line.",
+      "coach_s": 5.74,
+      "tokens": {
+        "drill": 502,
+        "coach": 369,
+        "drill_thinking_chars": 892,
+        "coach_thinking_chars": 808
+      }
+    },
+    {
+      "file": "f6-street-a.jpg",
+      "t": 50,
+      "drill": {
+        "t": 50.0,
+        "alive": true,
+        "situation": "fighting",
+        "minimap_grid": "road corridor, enemies/explosion to the right",
+        "threat": "right flank",
+        "event": "big hit taken",
+        "hypotheses": [
+          {
+            "guess": "Enemy fire/explosion is coming from the right side of the road",
+            "likelihood": 0.5
+          },
+          {
+            "guess": "Player is low on ammo and may need to reload soon",
+            "likelihood": 0.3
+          },
+          {
+            "guess": "BOB is deploying a defensive turret to help",
+            "likelihood": 0.2
+          }
+        ],
+        "call": "watch your flank",
+        "confidence": 0.55,
+        "reason": "Explosion and debris on the right edge of the screen suggest pressure from that side while the player is mid-road; call-ins are rearming and ammo is low, so a flank check is more useful than a reload call right now."
+      },
+      "drill_s": 8.34,
+      "coach": "Your mech is holding the road with a beam up while a big explosion is happening on the right and a burst is mid-road; objectives show 0/4 artillery and 0/65 eliminations. The call-ins are all rearming and the Gauss Rifle shows only 1 round, so you\u2019re low on support and ammo. In the next 10 seconds, stop firing and reposition/cover while the turret deploys and the right-side blast clears, then switch to the AC-20 canister (2) and re-engage the artillery/enemies rather than pushing into the explosion.",
+      "coach_s": 6.16,
+      "tokens": {
+        "drill": 521,
+        "coach": 398,
+        "drill_thinking_chars": 821,
+        "coach_thinking_chars": 840
+      }
+    },
+    {
+      "file": "f7-street-b.jpg",
+      "t": 54,
+      "drill": {
+        "t": 54.0,
+        "alive": true,
+        "situation": "low health",
+        "minimap_grid": "road crossing, player on left lane aiming up toward bright light",
+        "threat": "bright light/artillery ahead, small yellow mark right, blue glow mid-road",
+        "event": "objective done",
+        "hypotheses": [
+          {
+            "guess": "bright light ahead is the artillery target",
+            "likelihood": 0.5
+          },
+          {
+            "guess": "blue glow is an enemy/effect to engage",
+            "likelihood": 0.3
+          },
+          {
+            "guess": "yellow mark is a distant enemy",
+            "likelihood": 0.2
+          }
+        ],
+        "call": "hit the objective",
+        "confidence": 0.55,
+        "reason": "Aim line points at the bright light on the road and the mission is to destroy artillery; engaging it is the most useful next step."
+      },
+      "drill_s": 8.08,
+      "coach": "Your mech is sitting on the road with the artillery objective still at 0/4, and the call-ins are all rearming while the BUO is ready but not called. There's a glowing blue target/effect in the middle of the road and a small contact to your right, with the minimap showing the mission timer around 00:08.4. In the next 10 seconds, call the BUO (MMB) and push/engage the glowing contact rather than waiting on the rearming call-ins.",
+      "coach_s": 5.86,
+      "tokens": {
+        "drill": 499,
+        "coach": 379,
+        "drill_thinking_chars": 917,
+        "coach_thinking_chars": 855
+      }
+    },
+    {
+      "file": "f8-street-c.jpg",
+      "t": 58,
+      "drill": {
+        "t": 58.0,
+        "alive": true,
+        "situation": "low health",
+        "minimap_grid": "road corridor, player left-center, green enemy just right on road, bright spot above",
+        "threat": "green mech near player on road; bright light/spot ahead",
+        "event": "none",
+        "hypotheses": [
+          {
+            "guess": "Enemy approaching from right along road",
+            "likelihood": 0.5
+          },
+          {
+            "guess": "Bright spot is an objective/target to engage",
+            "likelihood": 0.3
+          },
+          {
+            "guess": "Player is lining up a shot on distant target",
+            "likelihood": 0.2
+          }
+        ],
+        "call": "keep moving",
+        "confidence": 0.45,
+        "reason": "Player is on an open road with a nearby glowing enemy and limited ammo; staying mobile and not committing yet is safer than a hard call."
+      },
+      "drill_s": 8.14,
+      "coach": "You're on a road with HP at 360, objectives showing 0/4 artillery destroyed and 0/65 eliminations, with your mech firing a beam upward while a green mech sits mid-road and a small yellow target is to your right. The call-ins (BUZZ, POTAKE, Cannon) are all rearming, so you're short on support right now. In the next 10 seconds, focus on engaging the green mech/yellow target ahead rather than chasing the beam\u2014keep your mech moving along the road and don't commit to a long shot until your weapons are back up.",
+      "coach_s": 6.24,
+      "tokens": {
+        "drill": 501,
+        "coach": 401,
+        "drill_thinking_chars": 939,
+        "coach_thinking_chars": 823
+      }
+    }
+  ]
+}

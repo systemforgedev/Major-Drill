@@ -1,0 +1,300 @@
+{
+  "model": "Huihui-Qwen3.8-27B-abliterated-Q5_K.gguf",
+  "vision": "mmproj-model-bf16.gguf",
+  "load_s": 31.4,
+  "think_budget": null,
+  "frames": [
+    {
+      "file": "f1-training-range.jpg",
+      "t": 0,
+      "drill": {
+        "t": 0.0,
+        "alive": true,
+        "situation": "mission failed or loading",
+        "minimap_grid": "player at bottom center, enemies clustered to the right",
+        "threat": "low",
+        "event": "mission complete",
+        "hypotheses": [
+          {
+            "guess": "Mission is complete and the player is in the results screen",
+            "likelihood": 0.9
+          },
+          {
+            "guess": "Player is in a menu or transition state",
+            "likelihood": 0.1
+          }
+        ],
+        "call": "none",
+        "confidence": 0.95,
+        "reason": "The screen shows a mission complete or results overlay, indicating the active gameplay phase has ended."
+      },
+      "drill_s": 4.36,
+      "coach": "You're in the spawn area with a cluster of enemies just to your right, and your Gauss Rifle is almost out of ammo (1 left). Switch to your HMG (key 1) and blast that group before they close in on you.",
+      "coach_s": 1.18,
+      "tokens": {
+        "drill": 206,
+        "coach": 51,
+        "drill_thinking_chars": 0,
+        "coach_thinking_chars": 0
+      }
+    },
+    {
+      "file": "f2-engagement.jpg",
+      "t": 10,
+      "drill": {
+        "t": 10.0,
+        "alive": true,
+        "situation": "in a menu or loadout screen",
+        "minimap_grid": "e",
+        "threat": "low",
+        "event": "none",
+        "hypotheses": [
+          {
+            "guess": "player is in a menu or loadout screen",
+            "likelihood": 0.9
+          },
+          {
+            "guess": "player is in a combat screen",
+            "likelihood": 0.1
+          }
+        ],
+        "call": "none",
+        "confidence": 0.95,
+        "reason": "The screen shows a menu or loadout interface, not active gameplay."
+      },
+      "drill_s": 3.88,
+      "coach": "You're holding the line against a swarm of enemies pushing in from the right, and your Gauss Rifle is nearly out of ammo with only 1 round left. Switch to your HMG (key 1) and hold your ground at the doorway, or use your Precision Mortar (key 1) to clear the cluster of enemies before they overwhelm you.",
+      "coach_s": 1.48,
+      "tokens": {
+        "drill": 194,
+        "coach": 73,
+        "drill_thinking_chars": 0,
+        "coach_thinking_chars": 0
+      }
+    },
+    {
+      "file": "f3-aim-lines.jpg",
+      "t": 20,
+      "drill": {
+        "t": 20.0,
+        "alive": true,
+        "situation": "in a menu or loadout screen",
+        "minimap_grid": "player at (12, 10), enemies at (14, 8), (14, 9), (14, 10), (14, 11), (14, 12)",
+        "threat": "low",
+        "event": "none",
+        "hypotheses": [
+          {
+            "guess": "player is in a menu or loadout screen",
+            "likelihood": 0.9
+          },
+          {
+            "guess": "player is about to spawn targets",
+            "likelihood": 0.1
+          }
+        ],
+        "call": "none",
+        "confidence": 0.95,
+        "reason": "The player is in a menu or loadout screen, so no immediate action is needed."
+      },
+      "drill_s": 4.68,
+      "coach": "You're currently locked onto a cluster of spawn targets on the right side of the map, and your crosshair is already aimed at the top one. Keep firing your HMG to clear them out before they overwhelm you.",
+      "coach_s": 1.07,
+      "tokens": {
+        "drill": 249,
+        "coach": 45,
+        "drill_thinking_chars": 0,
+        "coach_thinking_chars": 0
+      }
+    },
+    {
+      "file": "f4-allies.jpg",
+      "t": 30,
+      "drill": {
+        "t": 30.0,
+        "alive": true,
+        "situation": "low health",
+        "minimap_grid": "player center, 2 enemies right",
+        "threat": "2 enemies visible on the right, one close",
+        "event": "none",
+        "hypotheses": [
+          {
+            "guess": "Player is engaging the two visible enemies on the right",
+            "likelihood": 0.6
+          },
+          {
+            "guess": "Player is about to extract due to low HP",
+            "likelihood": 0.3
+          },
+          {
+            "guess": "Player is reloading",
+            "likelihood": 0.1
+          }
+        ],
+        "call": "back off",
+        "confidence": 0.85,
+        "reason": "HP is at 368 and extraction is available; with two enemies visible, it's safer to disengage and extract."
+      },
+      "drill_s": 4.41,
+      "coach": "You're taking fire from two enemies on the right side of the map, and you're currently sitting right next to the spawn targets. Move left to get behind the central wall for cover, then use your Precision Mortar (key 1) to hit those two enemies before they close the distance.",
+      "coach_s": 1.29,
+      "tokens": {
+        "drill": 241,
+        "coach": 61,
+        "drill_thinking_chars": 0,
+        "coach_thinking_chars": 0
+      }
+    },
+    {
+      "file": "f5-street-fight.jpg",
+      "t": 40,
+      "drill": {
+        "t": 40.0,
+        "alive": true,
+        "situation": "fighting",
+        "minimap_grid": "125m",
+        "threat": "medium",
+        "event": "none",
+        "hypotheses": [
+          {
+            "guess": "Player is engaging a target with the Gauss Rifle while a support turret fires.",
+            "likelihood": 0.8
+          },
+          {
+            "guess": "Player will advance to the next objective after clearing this target.",
+            "likelihood": 0.15
+          },
+          {
+            "guess": "Player will call in a support turret to hold the position.",
+            "likelihood": 0.05
+          }
+        ],
+        "call": "none",
+        "confidence": 0.95,
+        "reason": "Player is actively engaged and firing, with full HP and support turrets ready. No immediate action required."
+      },
+      "drill_s": 4.4,
+      "coach": "Your buddy is currently suppressing an enemy on the road, and you're positioned just behind him on the grass. Keep moving forward to get into the road and start firing your Gauss Rifle to help him finish off that target.",
+      "coach_s": 1.06,
+      "tokens": {
+        "drill": 242,
+        "coach": 45,
+        "drill_thinking_chars": 0,
+        "coach_thinking_chars": 0
+      }
+    },
+    {
+      "file": "f6-street-a.jpg",
+      "t": 50,
+      "drill": {
+        "t": 50.0,
+        "alive": true,
+        "situation": "low health",
+        "minimap_grid": "player at center, enemies to the east",
+        "threat": "enemy walker to the east",
+        "event": "none",
+        "hypotheses": [
+          {
+            "guess": "player is repositioning",
+            "likelihood": 0.4
+          },
+          {
+            "guess": "player is taking damage",
+            "likelihood": 0.3
+          },
+          {
+            "guess": "player is preparing to engage",
+            "likelihood": 0.3
+          }
+        ],
+        "call": "back off",
+        "confidence": 0.75,
+        "reason": "HP is at 368, which is getting low, and there's an enemy visible to the east. Backing off to a safer position or finding cover would be wise before re-engaging."
+      },
+      "drill_s": 3.71,
+      "coach": "You're currently taking fire from an enemy on the left, and your BOE Turret Assistant is busy deploying a defensive turret on your right. Keep moving to break their line of sight and let the turret finish deploying so it can cover your flank.",
+      "coach_s": 1.15,
+      "tokens": {
+        "drill": 186,
+        "coach": 51,
+        "drill_thinking_chars": 0,
+        "coach_thinking_chars": 0
+      }
+    },
+    {
+      "file": "f7-street-b.jpg",
+      "t": 54,
+      "drill": {
+        "t": 54.0,
+        "alive": true,
+        "situation": "moving to objective",
+        "minimap_grid": "e",
+        "threat": "low",
+        "event": "none",
+        "hypotheses": [
+          {
+            "guess": "player  is  moving  toward  the  artillery  objective  with  no  immediate  contact",
+            "likelihood": 0.7
+          },
+          {
+            "guess": "enemy  scouts  are  patrolling  the  road  ahead",
+            "likelihood": 0.2
+          },
+          {
+            "guess": "player  will  need  to  reload  before  reaching  the  objective",
+            "likelihood": 0.1
+          }
+        ],
+        "call": "keep moving",
+        "confidence": 0.65,
+        "reason": "HP  is  full,  weapons  are  rearming,  and  the  path  ahead  is  clear;  maintaining  momentum  toward  the  artillery  targets  is  the  priority."
+      },
+      "drill_s": 4.29,
+      "coach": "You're crossing the road with an enemy vehicle directly in your path to the left, and your crosshair is currently aimed at empty space to the right. Turn left to line up your Gauss Rifle on that enemy and fire before they can engage you.",
+      "coach_s": 1.15,
+      "tokens": {
+        "drill": 222,
+        "coach": 51,
+        "drill_thinking_chars": 0,
+        "coach_thinking_chars": 0
+      }
+    },
+    {
+      "file": "f8-street-c.jpg",
+      "t": 58,
+      "drill": {
+        "t": 58.0,
+        "alive": true,
+        "situation": "mission failed or loading",
+        "minimap_grid": "player center, 2 red marks NE",
+        "threat": "low",
+        "event": "mission complete",
+        "hypotheses": [
+          {
+            "guess": "mission complete screen",
+            "likelihood": 0.8
+          },
+          {
+            "guess": "transitioning to next area",
+            "likelihood": 0.15
+          },
+          {
+            "guess": "briefing pause",
+            "likelihood": 0.05
+          }
+        ],
+        "call": "none",
+        "confidence": 0.95,
+        "reason": "mission complete screen is up, no action needed"
+      },
+      "drill_s": 3.33,
+      "coach": "You're currently driving down the road with a green pickup item right in your path, and your HUD shows you're low on ammo for both weapons. Drive forward to grab that green item to resupply, then keep moving toward the objective.",
+      "coach_s": 1.13,
+      "tokens": {
+        "drill": 152,
+        "coach": 49,
+        "drill_thinking_chars": 0,
+        "coach_thinking_chars": 0
+      }
+    }
+  ]
+}
